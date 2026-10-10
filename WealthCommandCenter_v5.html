@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Wealth Command Center</title>
+<style>
+:root{
+  --bg0:#0c0c14;--bg1:#11111c;--bg2:#181826;--bg3:#1f1f32;--bg4:#26263e;
+  --bd:rgba(255,255,255,0.06);--bd2:rgba(139,92,246,0.25);
+  --p:#8b5cf6;--p2:#7c3aed;--pi:rgba(139,92,246,0.12);--s:#6366f1;
+  --pos:#10b981;--pos2:rgba(16,185,129,0.12);
+  --neg:#f43f5e;--neg2:rgba(244,63,94,0.12);
+  --warn:#f59e0b;--warn2:rgba(245,158,11,0.12);
+  --t0:#f1f0f7;--t1:#9896a8;--t2:#5e5c72;
+  --c1:#8b5cf6;--c2:#06b6d4;--c3:#10b981;--c4:#f59e0b;--c5:#f43f5e;
+  --c6:#a78bfa;--c7:#67e8f9;--c8:#34d399;
+  --nav:220px;--top:52px;--r:8px;--r2:14px;--r3:20px;
+  --font:'Inter',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono','Fira Code',monospace;--tr:0.15s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-size:13px}
+body{font-family:var(--font);background:var(--bg0);color:var(--t0);line-height:1.5}
+input,select,textarea,button{font-family:var(--font)}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* LAYOUT */
+#app{display:flex;height:100vh;overflow:hidden}
+#sb{width:var(--nav);background:var(--bg1);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:width .2s ease;z-index:20}
+#sb.slim{width:56px}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{height:var(--top);background:var(--bg1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
+#content{flex:1;overflow-y:auto;padding:20px;background:var(--bg0)}
+.page{display:none}.page.active{display:block}
+
+/* SIDEBAR */
+.s-logo{padding:14px 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd);min-height:52px}
+.s-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--p),var(--s));border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.s-mark svg{width:16px;height:16px;stroke:#fff;stroke-width:2;fill:none}
+.s-name{font-weight:700;font-size:12.5px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;opacity:1;transition:opacity .15s}
+.s-name small{display:block;color:var(--t2);font-weight:400;font-size:10px}
+#sb.slim .s-name{opacity:0;width:0}
+.s-nav{padding:6px 0;flex:1;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;color:var(--t1);font-size:12.5px;font-weight:500;transition:all var(--tr);position:relative;white-space:nowrap;overflow:hidden}
+.ni:hover{background:rgba(255,255,255,0.04);color:var(--t0)}
+.ni.on{background:var(--pi);color:var(--p)}
+.ni.on::before{content:'';position:absolute;left:0;top:15%;bottom:15%;width:2.5px;background:var(--p);border-radius:0 2px 2px 0}
+.ni svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;stroke-width:1.8;fill:none}
+.nt{transition:opacity .15s;opacity:1}
+#sb.slim .nt{opacity:0;width:0;overflow:hidden}
+#sb.slim .ni{padding:8px;justify-content:center}
+.s-foot{border-top:1px solid var(--bd);padding:6px 0}
+
+/* TOPBAR */
+.tb-ttl{font-size:15px;font-weight:700;flex:1}
+.tb-r{display:flex;align-items:center;gap:8px}
+.fresh{font-size:10.5px;color:var(--t2);background:var(--bg2);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:5px}
+.fdot{width:5px;height:5px;border-radius:50%;background:var(--pos)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all var(--tr);white-space:nowrap}
+.btn svg{width:13px;height:13px;flex-shrink:0;stroke:currentColor;stroke-width:2;fill:none}
+.bp{background:var(--p);color:#fff}.bp:hover{background:var(--p2);transform:translateY(-1px)}
+.bs{background:var(--bg3);color:var(--t0);border:1px solid var(--bd)}.bs:hover{background:var(--bg4);border-color:var(--bd2)}
+.bg{background:none;color:var(--t1);padding:5px 9px}.bg:hover{color:var(--t0);background:rgba(255,255,255,.05)}
+.bsm{padding:4px 9px;font-size:11px}
+.bico{width:30px;height:30px;padding:0;justify-content:center}
+.bdanger{background:var(--neg2);color:var(--neg);border:1px solid rgba(244,63,94,.2)}.bdanger:hover{background:var(--neg);color:#fff}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px;transition:border-color var(--tr)}
+.card:hover{border-color:rgba(139,92,246,.12)}
+.chd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ctit{font-size:10.5px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.4px}
+
+/* KPI */
+.kg{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);padding:14px 16px;transition:all var(--tr);position:relative;overflow:hidden}
+.kpi:hover{border-color:var(--bd2);transform:translateY(-2px)}
+.ki{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.ki svg{width:14px;height:14px;stroke-width:2;stroke:currentColor;fill:none}
+.kl{font-size:9.5px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.kv{font-size:20px;font-weight:700;letter-spacing:-.5px;line-height:1}
+.ks{font-size:10px;color:var(--t2);margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;margin-top:4px}
+.cp{background:var(--pos2);color:var(--pos)}.cn{background:var(--neg2);color:var(--neg)}.cw{background:var(--warn2);color:var(--warn)}.cg{background:rgba(255,255,255,.06);color:var(--t1)}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ga{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+
+/* TABS — scoped system */
+.tabs{display:flex;border-bottom:1px solid var(--bd);margin-bottom:16px;overflow-x:auto}
+.tab{padding:8px 14px;font-size:12px;font-weight:500;color:var(--t1);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all var(--tr);white-space:nowrap}
+.tab:hover{color:var(--t0)}.tab.on{color:var(--p);border-bottom-color:var(--p)}
+
+/* TABLES */
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--bd)}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 12px;text-align:left;font-size:9.5px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;background:var(--bg1);white-space:nowrap}
+td{padding:10px 12px;border-top:1px solid var(--bd);font-size:12px;vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+.tr{text-align:right}.tmono{font-family:var(--mono);font-size:11.5px}.tpos{color:var(--pos)}.tneg{color:var(--neg)}
+
+/* FORMS */
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:10.5px;font-weight:600;color:var(--t1);margin-bottom:4px}
+.fi,.fsel,.ftx{width:100%;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:7px 10px;font-size:12.5px;color:var(--t0);transition:border-color var(--tr)}
+.fi:focus,.fsel:focus,.ftx:focus{outline:none;border-color:var(--p)}
+.fsel option{background:var(--bg2)}.ftx{min-height:60px;resize:vertical}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fh{font-size:10px;color:var(--t2);margin-top:2px}
+.fck{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--t1)}
+.fck input{width:14px;height:14px;accent-color:var(--p)}
+
+/* MODAL */
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
+.mover.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r3);width:100%;max-width:500px;max-height:92vh;overflow-y:auto;animation:mIn .16s ease}
+.mlg{max-width:680px}
+.mhd{padding:16px 20px 12px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.mttl{font-size:14px;font-weight:700}
+.mbd{padding:16px 20px}
+.mft{padding:12px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--bg2)}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:none}}
+
+/* TOAST */
+#tc{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r2);padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;animation:tIn .18s ease;min-width:220px;max-width:320px}
+.t-ok{border-color:rgba(16,185,129,.3)}.t-err{border-color:rgba(244,63,94,.3)}.t-info{border-color:var(--bd2)}
+@keyframes tIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600}
+.bg-p{background:var(--pi);color:var(--p)}.bg-g{background:var(--pos2);color:var(--pos)}.bg-r{background:var(--neg2);color:var(--neg)}.bg-y{background:var(--warn2);color:var(--warn)}.bg-gray{background:rgba(255,255,255,.07);color:var(--t1)}
+
+/* PROGRESS */
+.prog{background:var(--bg4);border-radius:20px;height:5px;overflow:hidden}
+.pf{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--p),var(--s));transition:width .4s ease}
+.pfg{background:linear-gradient(90deg,var(--pos),#34d399)}.pfr{background:linear-gradient(90deg,var(--neg),#fb7185)}.pfy{background:linear-gradient(90deg,var(--warn),#fcd34d)}
+
+/* SECTION HEADER */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sttl{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.ssub{font-size:11.5px;color:var(--t1);margin-top:2px}
+
+/* EMPTY STATE */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;text-align:center}
+.ei{width:44px;height:44px;background:var(--bg3);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.ei svg{width:22px;height:22px;color:var(--t2);stroke:currentColor;fill:none;stroke-width:1.5}
+.ettl{font-size:14px;font-weight:600;margin-bottom:4px}
+.etxt{font-size:12px;color:var(--t1);max-width:280px}
+
+/* TOGGLE */
+.tgl{display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+.tgl-t{width:34px;height:18px;background:var(--bg4);border-radius:9px;position:relative;transition:background var(--tr);border:1px solid var(--bd);flex-shrink:0}
+.tgl input{display:none}
+.tgl input:checked~.tgl-t{background:var(--p);border-color:var(--p)}
+.tgl-th{position:absolute;top:2px;left:2px;width:12px;height:12px;background:#fff;border-radius:50%;transition:transform var(--tr)}
+.tgl input:checked~.tgl-t .tgl-th{transform:translateX(16px)}
+
+/* FAB */
+#fab{position:fixed;bottom:24px;right:24px;width:44px;height:44px;background:var(--p);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 18px rgba(139,92,246,.45);z-index:500;transition:all var(--tr)}
+#fab:hover{background:var(--p2);transform:scale(1.07)}
+#fab svg{width:20px;height:20px;stroke:#fff;stroke-width:2.5;fill:none}
+#fabm{position:fixed;bottom:74px;right:24px;background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r2);padding:6px;z-index:500;display:none;min-width:170px;animation:mIn .14s ease}
+#fabm.open{display:block}
+.fabi{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:var(--r);cursor:pointer;font-size:12px;font-weight:500;color:var(--t1);transition:all var(--tr)}
+.fabi:hover{background:var(--bg3);color:var(--t0)}
+.fabi svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;flex-shrink:0}
+
+/* WEALTH CATEGORY CARD */
+.wcat{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px;cursor:pointer;transition:all var(--tr);position:relative}
+.wcat:hover{border-color:var(--bd2);transform:translateY(-2px)}
+.wcat-ico{font-size:24px;margin-bottom:8px;display:block}
+.wcat-name{font-size:10.5px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.wcat-val{font-size:21px;font-weight:700;letter-spacing:-.5px}
+.wcat-upd{font-size:10px;color:var(--t2);margin-top:4px}
+.wcat-del{position:absolute;top:8px;right:8px;opacity:0;transition:opacity var(--tr)}
+.wcat:hover .wcat-del{opacity:1}
+.wcat.stale{border-color:rgba(245,158,11,.25)}
+.wcat.special{border-color:rgba(139,92,246,.2);background:linear-gradient(135deg,var(--bg2),rgba(139,92,246,.04))}
+
+/* CF item */
+.cfi{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)}
+.cfi:last-child{border-bottom:none}
+.cfil{font-size:12px;color:var(--t1);display:flex;align-items:center;gap:6px}
+.cfiv{font-size:12.5px;font-weight:600;font-family:var(--mono)}
+
+/* BBR */
+.bbr{display:flex;align-items:center;gap:8px;padding:4px 0}
+.bbl{font-size:11px;color:var(--t1);width:120px;flex-shrink:0}
+.bbb{flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.bbf{height:100%;border-radius:2px}
+.bbv{font-size:11px;font-weight:600;width:58px;text-align:right;flex-shrink:0}
+.bbp{font-size:10px;color:var(--t2);width:32px;text-align:right;flex-shrink:0}
+
+/* PULSE */
+.pli{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd)}
+.pli:last-child{border-bottom:none}
+.pld{width:6px;height:6px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.plt{font-size:12px;line-height:1.5;color:var(--t1)}.plt strong{color:var(--t0)}
+
+/* MILESTONES */
+.msi{display:flex;align-items:center;gap:10px;padding:6px 0}
+.msr{width:32px;height:32px;border-radius:50%;border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;font-weight:700;color:var(--t2)}
+.msr.done{border-color:var(--pos);background:var(--pos2);color:var(--pos)}
+.msr.cur{border-color:var(--p);background:var(--pi);color:var(--p)}
+
+/* GOAL CARD */
+.gc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);padding:14px;transition:border-color var(--tr)}
+.gc:hover{border-color:var(--bd2)}
+
+/* TRIP CARD */
+.tc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);padding:14px;cursor:pointer;transition:all var(--tr)}
+.tc:hover{border-color:var(--bd2);transform:translateY(-2px)}
+
+/* JOURNAL */
+.ji{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color var(--tr)}
+.ji:hover{border-color:var(--bd2)}
+
+/* SCENARIO */
+.sc{background:var(--bg3);border-radius:var(--r2);padding:14px;border-left:3px solid}
+.sc-c{border-left-color:var(--neg)}.sc-b{border-left-color:var(--p)}.sc-o{border-left-color:var(--pos)}
+
+/* FIRE */
+.fsr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd)}
+.fsr:last-child{border-bottom:none}
+.fsl{font-size:12px;color:var(--t1)}.fsv{font-size:12px;font-weight:600;font-family:var(--mono)}
+
+/* CONN */
+.cr{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
+.cr:last-child{border-bottom:none}
+.cd{font-size:11px;color:var(--t2);margin-top:2px}
+
+/* PERIOD */
+.pg{display:flex;gap:2px;background:var(--bg3);border-radius:var(--r);padding:2px}
+.pb{padding:4px 9px;font-size:10.5px;font-weight:500;border-radius:5px;cursor:pointer;color:var(--t2);transition:all var(--tr)}
+.pb.on{background:var(--bg2);color:var(--t0)}
+
+/* RADAR */
+.rsv text{fill:rgba(255,255,255,.35);font-size:9px;font-family:system-ui}
+
+/* WIZARD */
+#wiz{position:fixed;inset:0;background:var(--bg0);z-index:9000;display:flex;align-items:center;justify-content:center}
+.wcard{background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r3);padding:36px;width:100%;max-width:460px;animation:mIn .2s ease}
+.wstep{display:none}.wstep.on{display:block}
+.wmark{width:44px;height:44px;background:linear-gradient(135deg,var(--p),var(--s));border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.wmark svg{width:22px;height:22px;stroke:#fff;stroke-width:2;fill:none}
+.wttl{font-size:20px;font-weight:700;margin-bottom:6px}
+.wsub{font-size:12.5px;color:var(--t1);margin-bottom:22px;line-height:1.6}
+.wdots{display:flex;gap:5px;margin-bottom:20px}
+.wd{width:5px;height:5px;border-radius:50%;background:var(--t2);transition:all var(--tr)}
+.wd.on{background:var(--p);width:18px;border-radius:3px}
+.sopt{background:var(--bg3);border:2px solid var(--bd);border-radius:var(--r2);padding:14px;cursor:pointer;transition:border-color var(--tr);margin-bottom:8px}
+.sopt.sel{border-color:var(--p)}.sopt:hover{border-color:var(--bd2)}
+
+/* UTIL */
+.flex{display:flex}.fc{flex-direction:column}.fi2{align-items:center}.jb{justify-content:space-between}
+.g4p{gap:4px}.g6{gap:6px}.g8{gap:8px}.g10{gap:10px}.g12{gap:12px}.g16{gap:16px}
+.mt4{margin-top:4px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}.warn{color:var(--warn)}.muted{color:var(--t2)}.sec{color:var(--t1)}
+.bold{font-weight:700}.semi{font-weight:600}.mono{font-family:var(--mono)}
+.hide{display:none!important}.trunc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.div{height:1px;background:var(--bd);margin:12px 0}
+.dsrc{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:8px 12px;font-size:11px;color:var(--t1);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.dsrcd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* ACCT CARD */
+.accard{border-radius:var(--r2);padding:16px;border:1px solid var(--bd);background:var(--bg2)}
+
+/* PRINT */
+@media print{#sb,#topbar,#fab,#fabm,#tc,.btn,.tabs,.np{display:none!important}#content{padding:0!important;overflow:visible!important}#main{overflow:visible!important}body{background:#fff;color:#000;overflow:visible}.card,.kpi,.gc{border:1px solid #ddd;break-inside:avoid}}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.kg{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.kg{grid-template-columns:repeat(2,1fr)}.g2,.g3,.g4{grid-template-columns:1fr}}
+@media(max-width:600px){#content{padding:12px}.kg{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<!-- WIZARD -->
+<div id="wiz">
+  <div class="wcard">
+    <div class="wstep on" id="ws1">
+      <div class="wmark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div class="wdots"><div class="wd on"></div><div class="wd"></div><div class="wd"></div></div>
+      <div class="wttl">Wealth Command Center</div>
+      <div class="wsub">Private, offline financial dashboard. No servers, no subscriptions. All data stays in your browser.</div>
+      <div class="fr"><div class="fg"><label class="fl">Your name</label><input class="fi" id="wn" placeholder="e.g. Subham"></div><div class="fg"><label class="fl">Current age</label><input type="number" class="fi" id="wa" placeholder="32"></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Financial year</label><select class="fsel" id="wfy"><option value="indian">Indian (Apr–Mar)</option><option value="calendar">Calendar (Jan–Dec)</option></select></div><div class="fg"><label class="fl">Inflation assumption (%)</label><input type="number" class="fi" id="winf" value="6" step="0.5"></div></div>
+      <div class="flex g8 mt16"><button class="btn bp" onclick="wNext(1)">Continue</button><button class="btn bg" onclick="wSkip()">Skip setup</button></div>
+    </div>
+    <div class="wstep" id="ws2">
+      <div class="wdots"><div class="wd"></div><div class="wd on"></div><div class="wd"></div></div>
+      <div class="wttl">Financial baseline</div>
+      <div class="wsub">Seeds the forecast engine. Change anytime in Settings.</div>
+      <div class="fr"><div class="fg"><label class="fl">Monthly income (₹)</label><input type="number" class="fi" id="wi" placeholder="200000"></div><div class="fg"><label class="fl">Monthly expenses (₹)</label><input type="number" class="fi" id="we" placeholder="80000"></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Emergency fund target</label><select class="fsel" id="wem"><option value="3">3 months</option><option value="6" selected>6 months</option><option value="9">9 months</option><option value="12">12 months</option></select></div><div class="fg"><label class="fl">Retirement age</label><input type="number" class="fi" id="wra" value="55"></div></div>
+      <div class="flex g8 mt16"><button class="btn bp" onclick="wNext(2)">Continue</button><button class="btn bs" onclick="wBack(2)">Back</button></div>
+    </div>
+    <div class="wstep" id="ws3">
+      <div class="wdots"><div class="wd"></div><div class="wd"></div><div class="wd on"></div></div>
+      <div class="wttl">How would you like to start?</div>
+      <div class="wsub">Demo data gives a fully populated view to explore before entering your own numbers.</div>
+      <div class="sopt sel" id="sblank" onclick="selMode('blank')"><div class="flex fi2 g10"><span style="font-size:22px">📋</span><div><div style="font-weight:600;font-size:12.5px">Start blank</div><div style="font-size:11px;color:var(--t1)">Enter your own financial data</div></div></div></div>
+      <div class="sopt" id="sdemo" onclick="selMode('demo')"><div class="flex fi2 g10"><span style="font-size:22px">🚀</span><div><div style="font-weight:600;font-size:12.5px">Load demo data</div><div style="font-size:11px;color:var(--t1)">Explore with realistic sample data</div></div></div></div>
+      <div class="flex g8 mt16"><button class="btn bp" onclick="wFinish()">Launch Dashboard</button><button class="btn bs" onclick="wBack(3)">Back</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <nav id="sb">
+    <div class="s-logo">
+      <div class="s-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div class="s-name">Wealth<br><small>Command Center</small></div>
+    </div>
+    <div class="s-nav">
+      <div class="ni on" data-pg="cc" onclick="nav('cc',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span class="nt">Command Center</span></div>
+      <div class="ni" data-pg="cf" onclick="nav('cf',this)"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="nt">Cash Flow</span></div>
+      <div class="ni" data-pg="mw" onclick="nav('mw',this)"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span class="nt">My Wealth</span></div>
+      <div class="ni" data-pg="fp" onclick="nav('fp',this)"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span class="nt">Future Planning</span></div>
+      <div class="ni" data-pg="mr" onclick="nav('mr',this)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nt">My Records</span></div>
+    </div>
+    <div class="s-foot">
+      <div class="ni" onclick="gotoSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg><span class="nt">Settings</span></div>
+    </div>
+  </nav>
+  <div id="main">
+    <div id="topbar">
+      <button class="btn bg bico" onclick="toggleNav()"><svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="tb-ttl" id="pgtit">Command Center</div>
+      <div class="tb-r">
+        <div class="fresh"><span class="fdot"></span><span id="ftxt">All data current</span></div>
+        <button class="btn bs bsm" onclick="startReview()"><svg viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>Monthly Review</button>
+        <button class="btn bp bsm" onclick="openSnap()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M4 8h2l2-3h8l2 3h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"/></svg>Capture Snapshot</button>
+      </div>
+    </div>
+    <div id="content">
+      <div class="page active" id="pg-cc"></div>
+      <div class="page" id="pg-cf"></div>
+      <div class="page" id="pg-mw"></div>
+      <div class="page" id="pg-fp"></div>
+      <div class="page" id="pg-mr"></div>
+    </div>
+  </div>
+</div>
+
+<div id="fab" onclick="toggleFab()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+<div id="fabm">
+  <div class="fabi" onclick="openCFEntry('income');closeFab()"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>Log Income</div>
+  <div class="fabi" onclick="openCFEntry('expense');closeFab()"><svg viewBox="0 0 24 24"><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Log Expense</div>
+  <div class="fabi" onclick="openCFEntry('investment');closeFab()"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Log Investment</div>
+  <div class="fabi" onclick="openUpdateWealth();closeFab()"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Update Wealth</div>
+  <div class="fabi" onclick="openUpdateAccounts();closeFab()"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Update Accounts</div>
+  <div class="fabi" onclick="openSnap();closeFab()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M4 8h2l2-3h8l2 3h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"/></svg>Capture Snapshot</div>
+  <div class="fabi" onclick="openModal('goal');closeFab()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Add Goal</div>
+</div>
+<div id="tc"></div>
+<div id="modals"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA MODEL
+// ═══════════════════════════════════════════
+const DBKEY='wcc5';const VER=5;
+
+// WEALTH CATEGORIES — user can enable/disable
+// Built-in defaults; user preference stored in S.activeCats
+const ALL_WCATS=[
+  {id:'mf',      label:'Mutual Funds',        icon:'📈',color:'var(--c1)',xRet:11,group:'market'},
+  {id:'stocks',  label:'Indian Stocks',        icon:'🏦',color:'var(--c2)',xRet:12,group:'market'},
+  {id:'usstocks',label:'US Stocks',            icon:'🌐',color:'var(--c3)',xRet:12,group:'market'},
+  {id:'nps',     label:'NPS',                  icon:'🛡️',color:'var(--c4)',xRet:9, group:'retirement'},
+  {id:'pf',      label:'PF / EPF',             icon:'🏛️',color:'var(--c5)',xRet:8.15,group:'retirement'},
+  {id:'ppf',     label:'PPF',                  icon:'📋',color:'var(--c6)',xRet:7.1,group:'retirement'},
+  {id:'fd',      label:'Fixed Deposits',       icon:'🔒',color:'var(--c7)',xRet:7.5,group:'liquid'},
+  {id:'gold',    label:'Gold / SGB',           icon:'🥇',color:'#fbbf24',xRet:8,  group:'market'},
+  {id:'re',      label:'Real Estate',          icon:'🏠',color:'#6ee7b7',xRet:7,  group:'illiquid'},
+  {id:'other',   label:'Other Assets',         icon:'📦',color:'#94a3b8',xRet:8,  group:'other'},
+];
+
+// Special synthetic categories — always computed from accounts, not manually updated
+const SYNTH_CATS=[
+  {id:'__salary_acct',   label:'Daily Account Balance',  icon:'💳',color:'var(--pos)', group:'liquid', synth:true},
+  {id:'__savings_liq',   label:'Savings — Liquid Buffer', icon:'💧',color:'var(--c2)', group:'liquid', synth:true},
+  {id:'__em_fund',       label:'Emergency Fund',          icon:'🛡️',color:'var(--warn)',group:'liquid', synth:true},
+];
+
+const CFCATS=[
+  {id:'salary',    label:'Salary',            icon:'💼',type:'income',   color:'var(--pos)'},
+  {id:'bonus',     label:'Bonus / Incentive', icon:'🎁',type:'income',   color:'var(--pos)'},
+  {id:'interest',  label:'Interest / Div.',   icon:'📊',type:'income',   color:'var(--pos)'},
+  {id:'rental',    label:'Rental Income',     icon:'🏘️',type:'income',   color:'var(--pos)'},
+  {id:'other_in',  label:'Other Income',      icon:'➕',type:'income',   color:'var(--pos)'},
+  {id:'mf_sip',    label:'MF / SIP',          icon:'📈',type:'investment',color:'var(--c1)'},
+  {id:'stocks_buy',label:'Stock Purchase',    icon:'🏦',type:'investment',color:'var(--c2)'},
+  {id:'nps_cont',  label:'NPS Contribution',  icon:'🛡️',type:'investment',color:'var(--c4)'},
+  {id:'pf_cont',   label:'PF Contribution',   icon:'🏛️',type:'investment',color:'var(--c5)'},
+  {id:'ppf_cont',  label:'PPF Deposit',       icon:'📋',type:'investment',color:'var(--c6)'},
+  {id:'fd_new',    label:'FD Opened',         icon:'🔒',type:'investment',color:'var(--c7)'},
+  {id:'us_buy',    label:'US Stocks / ETF',   icon:'🌐',type:'investment',color:'var(--c3)'},
+  {id:'other_inv', label:'Other Investment',  icon:'📦',type:'investment',color:'#94a3b8'},
+  {id:'housing',   label:'Housing / EMI',     icon:'🏠',type:'expense',  color:'var(--neg)'},
+  {id:'food',      label:'Food & Groceries',  icon:'🛒',type:'expense',  color:'#fb923c'},
+  {id:'transport', label:'Transport',          icon:'🚗',type:'expense',  color:'#facc15'},
+  {id:'utilities', label:'Utilities & Bills', icon:'💡',type:'expense',  color:'#a3e635'},
+  {id:'health',    label:'Healthcare',         icon:'🏥',type:'expense',  color:'#34d399'},
+  {id:'leisure',   label:'Leisure & Dining',  icon:'🎭',type:'expense',  color:'#38bdf8'},
+  {id:'shopping',  label:'Shopping',           icon:'🛍️',type:'expense',  color:'#c084fc'},
+  {id:'travel_exp',label:'Travel',             icon:'✈️',type:'expense',  color:'#f472b6'},
+  {id:'family',    label:'Family & Education',icon:'👨‍👩‍👧',type:'expense',  color:'#fbbf24'},
+  {id:'other_exp', label:'Other Expenses',    icon:'📝',type:'expense',  color:'#94a3b8'},
+];
+
+const DS={
+  v:VER,
+  cfg:{name:'',age:null,fy:'indian',inflation:6,emMonths:6,retireAge:55,lifeExp:85,
+       milestones:[2500000,5000000,10000000,25000000,50000000,100000000,200000000]},
+  conn:{mwToFP:true,cfToFP:true,goalsToFP:true,travelToCF:false},
+  // activeCats: which ALL_WCATS ids are shown in My Wealth (default all)
+  activeCats:ALL_WCATS.map(c=>c.id),
+  // showSynthCats: which synthetic account-derived categories show in My Wealth
+  showSynthCats:['__salary_acct','__savings_liq','__em_fund'],
+  // Bank accounts: {id,name,type('daily'|'savings'),balance,emPortion,liquidPortion,note}
+  accounts:[],
+  // wealthLog: {id,catId,date,value,note}  — only for ALL_WCATS, not synth
+  wealthLog:[],
+  // cfLog: {id,date,type,catId,amt,note,recur}
+  cfLog:[],
+  liabs:[],
+  snaps:[],
+  goals:[],
+  trips:[],
+  journal:[],
+  fs:{dur:20,conservative:{ret:8,inf:7},base:{ret:11,inf:6},optimistic:{ret:14,inf:5},stepUp:10,wRate:4,postRet:8,target:0}
+};
+
+let S=JSON.parse(JSON.stringify(DS));
+let startMode='blank';
+let curPage='cc';
+
+function save(){try{localStorage.setItem(DBKEY,JSON.stringify(S));}catch(e){toast('Storage error','err');}}
+function load(){
+  const r=localStorage.getItem(DBKEY);if(!r)return false;
+  try{const d=JSON.parse(r);
+    S=JSON.parse(JSON.stringify(DS));
+    // Deep merge preserving arrays
+    Object.keys(d).forEach(k=>{if(k in S)S[k]=d[k];});
+    S.v=VER;
+    if(!S.activeCats||!S.activeCats.length)S.activeCats=ALL_WCATS.map(c=>c.id);
+    if(!S.showSynthCats)S.showSynthCats=['__salary_acct','__savings_liq','__em_fund'];
+    return true;
+  }catch(e){return false;}
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function today(){return new Date().toISOString().slice(0,10);}
+function mkey(d){const t=d?new Date(d):new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0');}
+
+// ─── FORMATTING ───────────────────────────
+function fi(n,short){
+  if(n===null||n===undefined||isNaN(n))return'—';
+  const abs=Math.abs(n),sign=n<0?'-':'';
+  if(short){
+    if(abs>=1e7)return sign+'₹'+(abs/1e7).toFixed(2).replace(/\.?0+$/,'')+'Cr';
+    if(abs>=1e5)return sign+'₹'+(abs/1e5).toFixed(2).replace(/\.?0+$/,'')+'L';
+    if(abs>=1e3)return sign+'₹'+(abs/1e3).toFixed(1).replace(/\.?0+$/,'')+'K';
+    return sign+'₹'+abs.toFixed(0);
+  }
+  return sign+'₹'+abs.toLocaleString('en-IN',{maximumFractionDigits:0});
+}
+function fp(n,d){if(n===null||n===undefined||isNaN(n))return'—';return(n>=0?'+':'')+n.toFixed(d||1)+'%';}
+function fd(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function fmy(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{month:'short',year:'numeric'});}
+function chip(v,pct){
+  if(v===null||isNaN(v))return'';
+  return`<span class="chip ${v>=0?'cp':'cn'}">${v>=0?'+':''}${fi(v,true)}${pct!==null&&pct!==undefined?' ('+fp(pct)+')':''}</span>`;
+}
+
+// ─── SINGLE SOURCE OF TRUTH FOR WEALTH ───
+// Account helpers
+function getAcct(type){return S.accounts.find(a=>a.type===type);}
+function acctBal(type){return getAcct(type)?.balance||0;}
+function emFromAccts(){return S.accounts.reduce((s,a)=>s+(a.emPortion||0),0);}
+function liqFromAccts(){return S.accounts.reduce((s,a)=>s+(a.liquidPortion||0),0);}
+function dailyAcctBal(){return acctBal('daily');}
+function savingsAcctBal(){return acctBal('savings');}
+
+// Latest manual wealth log value for a given category
+function latestCatVal(catId){
+  const entries=S.wealthLog.filter(e=>e.catId===catId).sort((a,b)=>b.date.localeCompare(a.date));
+  return entries.length?entries[0]:{value:0,date:null};
+}
+
+// CANONICAL asset totals — single function, no duplication
+// RULE: accounts contribute their FULL balance to assets
+//       wealthLog categories add their values
+//       Emergency fund = portion of savings account (emPortion) — NOT a separate asset
+//       Liquid buffer = portion of savings account (liquidPortion) — NOT a separate asset
+function computeAssets(){
+  // 1. Manual investment/wealth categories (MF, stocks, PF, FD, etc.)
+  const investments=S.activeCats.reduce((s,id)=>{
+    const cat=ALL_WCATS.find(c=>c.id===id);if(!cat)return s;
+    return s+(latestCatVal(id).value||0);
+  },0);
+  // 2. Bank account balances (FULL balance, as the savings splits are subdivisions not separate assets)
+  const accountBals=S.accounts.reduce((s,a)=>s+(a.balance||0),0);
+  return{investments,accountBals,total:investments+accountBals};
+}
+function totalLiabs(){return S.liabs.reduce((s,l)=>s+(l.prin||0),0);}
+function netWorthCalc(){
+  const a=computeAssets();return{assets:a.total,liabs:totalLiabs(),nw:a.total-totalLiabs(),investments:a.investments,accountBals:a.accountBals};
+}
+
+// Emergency fund: from account emPortion; fallback to savings account if no split set
+function emFund(){
+  const acctEM=emFromAccts();
+  const monthly=monthlyExpenseEst();
+  const target=monthly*(S.cfg.emMonths||6);
+  const months=monthly>0?acctEM/monthly:0;
+  return{alloc:acctEM,monthly,target,months,shortfall:Math.max(0,target-acctEM)};
+}
+
+// ─── CASH FLOW HELPERS ────────────────────
+function cfByType(type,months){
+  const now=new Date();let tot=0,cnt=0;
+  for(let i=0;i<months;i++){
+    const mk=mkey(new Date(now.getFullYear(),now.getMonth()-i,1));
+    const v=S.cfLog.filter(e=>e.type===type&&mkey(e.date)===mk).reduce((s,e)=>s+e.amt,0);
+    if(v>0){tot+=v;cnt++;}
+  }
+  return cnt>0?tot/cnt:0;
+}
+function monthlyIncomeEst(){
+  const avg=cfByType('income',3);
+  if(avg>0)return avg;
+  return S.cfLog.filter(e=>e.type==='income'&&e.recur).reduce((s,e)=>s+e.amt,0)||0;
+}
+function monthlyInvestmentEst(){return cfByType('investment',3);}
+function monthlyExpenseActual(mo){return cfByType('expense',mo);}
+function monthlyExpenseEst(){
+  const actual=monthlyExpenseActual(3);
+  if(actual>0)return actual;
+  return Math.max(0,monthlyIncomeEst()-monthlyInvestmentEst());
+}
+function cfThisMonth(){
+  const mk=mkey();
+  const get=type=>S.cfLog.filter(e=>e.type===type&&mkey(e.date)===mk).reduce((s,e)=>s+e.amt,0);
+  const inc=get('income'),inv=get('investment'),exp=get('expense');
+  return{inc,inv,exp,surplus:inc-inv-exp};
+}
+
+// ─── FORECAST ENGINE ─────────────────────
+// Uses only investable portfolio (not liquid cash or emergency fund) as starting value
+// because those serve a different purpose and shouldn't compound at equity returns
+function investablePortfolio(){
+  // investments only — MF, stocks, NPS, PF, PPF, FD, gold, RE, other
+  // NOT daily account balance, NOT savings account (those are at low/no return)
+  return S.activeCats.reduce((s,id)=>{
+    const cat=ALL_WCATS.find(c=>c.id===id);if(!cat)return s;
+    return s+(latestCatVal(id).value||0);
+  },0);
+}
+function weightedReturnRate(){
+  // Weighted average of expected return across active categories by value
+  const cats=S.activeCats.map(id=>{
+    const cat=ALL_WCATS.find(c=>c.id===id);if(!cat)return null;
+    const v=latestCatVal(id).value||0;
+    return{v,xRet:cat.xRet||8};
+  }).filter(Boolean).filter(c=>c.v>0);
+  const totalV=cats.reduce((s,c)=>s+c.v,0);
+  if(!totalV)return S.fs.base.ret;
+  return cats.reduce((s,c)=>s+(c.xRet*c.v/totalV),0);
+}
+function forecast(p){
+  const{start,mContrib,stepUp,ret,inf,yrs}=p;
+  const results=[];let port=start,mc=mContrib;
+  // Convert annual rates to monthly
+  const mr=Math.pow(1+ret/100,1/12)-1;
+  const mi=Math.pow(1+inf/100,1/12)-1;
+  const tot=yrs*12;let ifac=1;
+  for(let m=0;m<tot;m++){
+    if(m>0&&m%12===0)mc=mc*(1+stepUp/100);
+    // Contribution at start of month, then growth
+    port=(port+mc)*(1+mr);
+    port=Math.max(0,port);
+    ifac*=(1+mi);
+    if(m%12===11||m===tot-1)results.push({yr:Math.floor(m/12)+1,nom:port,real:port/ifac,mc:mc*12});
+  }
+  return results;
+}
+function fireCalc(){
+  const N=netWorthCalc(),fs=S.fs;
+  const age=S.cfg.age||30,ra=S.cfg.retireAge||55,le=S.cfg.lifeExp||85;
+  const ytr=Math.max(0,ra-age);
+  const mExp=monthlyExpenseEst()||50000;
+  const preR=fs.base.ret/100,preI=fs.base.inf/100;
+  const expAtRet=mExp*12*Math.pow(1+preI,ytr);
+  const wr=(fs.wRate||4)/100;
+  const corpus=expAtRet/wr;
+  // Use investable portfolio as starting point for FIRE calc
+  const startPort=investablePortfolio();
+  const mContrib=monthlyInvestmentEst()||20000;
+  // FV of lump sum: P*(1+r)^n
+  // FV of annuity (contribution at start of period): C*((1+r)^n - 1)/r * (1+r)
+  const fvLump=startPort*Math.pow(1+preR,ytr);
+  const fvContrib=preR>0?mContrib*12*((Math.pow(1+preR,ytr)-1)/preR):mContrib*12*ytr;
+  const projCorpus=fvLump+fvContrib;
+  // Required additional monthly SIP to bridge gap
+  const mr=Math.pow(1+preR,1/12)-1;
+  const reqMC=gap=>ytr>0&&mr>0?(gap*mr)/(Math.pow(1+mr,ytr*12)-1):gap/(ytr*12||1);
+  const gap=Math.max(0,corpus-projCorpus);
+  // FI age: find first year where portfolio covers corpus
+  let fiAge=null;
+  for(let a=age+1;a<=le;a++){
+    const y=a-age;
+    const p=startPort*Math.pow(1+preR,y)+(preR>0?mContrib*12*((Math.pow(1+preR,y)-1)/preR):mContrib*12*y);
+    const needed=(mExp*12*Math.pow(1+preI,y))/wr;
+    if(p>=needed){fiAge=a;break;}
+  }
+  return{age,ra,ytr,dur:le-ra,mExp,expAtRet,corpus,projCorpus,gap,mContrib,reqMC:reqMC(gap),fiAge};
+}
+function goalCalc(g){
+  const now=new Date(),td=g.tDate?new Date(g.tDate):now;
+  const yrs=Math.max(0,(td-now)/(365.25*864e5));
+  const r=(g.xRet||10)/100,inf=(g.inf||S.cfg.inflation)/100;
+  const inflTgt=g.target*Math.pow(1+inf,yrs);
+  const projE=(g.earmark||0)*Math.pow(1+r,yrs);
+  const mo=Math.floor(yrs*12),rm=r/12;
+  const mc=g.mContrib||0;
+  // FV of monthly contribution at start of period (annuity due)
+  const projC=mc>0&&mo>0&&rm>0?mc*(Math.pow(1+rm,mo)-1)/rm*(1+rm):mc*mo;
+  const proj=projE+projC;
+  const pct=g.target>0?Math.min(100,(g.earmark||0)/g.target*100):0;
+  const req=yrs>0&&rm>0?Math.max(0,(inflTgt-projE)*rm/(Math.pow(1+rm,mo)-1)):0;
+  return{target:g.target,inflTgt,earmark:g.earmark||0,proj,pct,shortfall:Math.max(0,inflTgt-proj),yrs,req};
+}
+function healthScores(){
+  const N=netWorthCalc(),em=emFund();
+  const inc=monthlyIncomeEst(),inv=monthlyInvestmentEst();
+  const sr=inc>0?inv/inc*100:null;
+  const liquid=acctBal('daily')+(liqFromAccts())+emFromAccts();
+  const activeCatCount=S.activeCats.filter(id=>(latestCatVal(id).value||0)>0).length;
+  const emCov=em.monthly>0?em.months/S.cfg.emMonths*100:null;
+  const goalAvg=S.goals.length>0?S.goals.reduce((s,g)=>s+goalCalc(g).pct,0)/S.goals.length:null;
+  const debtR=N.assets>0?Math.min(100,Math.max(0,(1-N.liabs/N.assets)*100)):null;
+  return{
+    savings:sr!==null?Math.min(100,sr/20*100):null,
+    liquidity:N.assets>0?Math.min(100,(liquid/N.assets)*150):null,
+    diversity:activeCatCount>0?Math.min(100,activeCatCount*15):null,
+    emergency:emCov,goals:goalAvg,debt:debtR
+  };
+}
+
+// ─── SVG CHARTS ──────────────────────────
+function svgLine(data,w,h,color,fill,labels){
+  if(!data||data.length<2)return`<div class="empty" style="height:${h}px"><div class="etxt">At least 2 data points needed</div></div>`;
+  const min=Math.min(...data),max=Math.max(...data),rng=max-min||1;
+  const pad={t:10,r:8,b:26,l:54};const iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const px=i=>pad.l+i/(data.length-1)*iw,py=v=>pad.t+ih-(v-min)/rng*ih;
+  const pts=data.map((v,i)=>px(i)+','+py(v)).join(' ');
+  const gid='lg'+color.replace(/[^a-z0-9]/gi,'');
+  const ticks=Array.from({length:5},(_,i)=>min+rng*i/4);
+  return`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">
+  <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity=".3"/><stop offset="100%" stop-color="${color}" stop-opacity=".02"/></linearGradient></defs>
+  ${ticks.map(t=>`<line x1="${pad.l}" x2="${pad.l+iw}" y1="${py(t)}" y2="${py(t)}" stroke="rgba(255,255,255,0.05)"/>
+  <text x="${pad.l-4}" y="${py(t)+4}" text-anchor="end" fill="rgba(255,255,255,0.3)" font-size="9" font-family="system-ui">${fi(t,true)}</text>`).join('')}
+  ${fill?`<polygon points="${px(0)},${pad.t+ih} ${pts} ${px(data.length-1)},${pad.t+ih}" fill="url(#${gid})"/>`:''}
+  <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+  ${data.map((v,i)=>`<circle cx="${px(i)}" cy="${py(v)}" r="3" fill="${color}"/>`).join('')}
+  ${labels?labels.map((l,i)=>`<text x="${px(i)}" y="${h-4}" text-anchor="middle" fill="rgba(255,255,255,0.28)" font-size="9" font-family="system-ui">${l}</text>`).join(''):''}
+  </svg>`;
+}
+function svgDonut(data,w,cx,cy,r){
+  const tot=data.reduce((s,d)=>s+d.val,0);if(!tot)return'';
+  let angle=-Math.PI/2;
+  const paths=data.map(d=>{
+    const a=d.val/tot*2*Math.PI;
+    const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
+    const x2=cx+r*Math.cos(angle+a),y2=cy+r*Math.sin(angle+a);
+    const ri=r*.58,xi1=cx+ri*Math.cos(angle),yi1=cy+ri*Math.sin(angle),xi2=cx+ri*Math.cos(angle+a),yi2=cy+ri*Math.sin(angle+a);
+    const lg=a>Math.PI?1:0;
+    const p=`<path d="M${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2} L${xi2},${yi2} A${ri},${ri} 0 ${lg},0 ${xi1},${yi1} Z" fill="${d.color}" opacity=".9"><title>${d.label}: ${fi(d.val,true)} (${(d.val/tot*100).toFixed(1)}%)</title></path>`;
+    angle+=a;return p;
+  });
+  return`<svg viewBox="0 0 ${w} ${cy*2}" style="width:100%">${paths.join('')}
+  <circle cx="${cx}" cy="${cy}" r="${r*.52}" fill="var(--bg2)"/>
+  <text x="${cx}" y="${cy-3}" text-anchor="middle" fill="var(--t0)" font-size="12" font-weight="700" font-family="system-ui">${fi(tot,true)}</text>
+  <text x="${cx}" y="${cy+14}" text-anchor="middle" fill="var(--t2)" font-size="9" font-family="system-ui">Total</text>
+  </svg>`;
+}
+function svgBars(cats,valArrays,w,h,colors){
+  if(!valArrays||!valArrays.length)return'';
+  const allVals=valArrays.flat();const max=Math.max(...allVals)||1;
+  const pad={t:10,r:8,b:26,l:52};const iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const n=cats.length,bw=iw/n;const isM=Array.isArray(valArrays[0]);
+  const ticks=Array.from({length:5},(_,i)=>max*i/4);
+  return`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">
+  ${ticks.map(t=>`<line x1="${pad.l}" x2="${pad.l+iw}" y1="${pad.t+ih-t/max*ih}" y2="${pad.t+ih-t/max*ih}" stroke="rgba(255,255,255,0.05)"/>
+  <text x="${pad.l-4}" y="${pad.t+ih-t/max*ih+4}" text-anchor="end" fill="rgba(255,255,255,0.3)" font-size="9" font-family="system-ui">${fi(t,true)}</text>`).join('')}
+  ${cats.map((cat,i)=>{
+    const arr=isM?valArrays.map(va=>va[i]):[valArrays[i]];
+    const cx=pad.l+i*bw+bw/2;
+    return arr.map((val,j)=>{
+      const bW=isM?bw/(arr.length+.5):bw*.55;
+      const x=isM?cx-bW*arr.length/2+j*bW:cx-bW/2;
+      const bh=Math.max(0,val/max*ih);
+      return`<rect x="${x}" y="${pad.t+ih-bh}" width="${bW-1}" height="${bh}" fill="${colors&&colors[j]||'var(--p)'}" rx="2" opacity=".87"><title>${cat}: ${fi(val,true)}</title></rect>`;
+    }).join('');
+  }).join('')}
+  ${cats.map((c,i)=>`<text x="${pad.l+(i+.5)*bw}" y="${h-4}" text-anchor="middle" fill="rgba(255,255,255,0.28)" font-size="9" font-family="system-ui">${c}</text>`).join('')}
+  </svg>`;
+}
+function svgMultiLine(series,labels,w,h){
+  if(!series.length||!labels.length)return`<div class="empty" style="height:${h}px"><div class="etxt">No data</div></div>`;
+  const allV=series.flatMap(s=>s.vals);
+  const min=Math.min(...allV),max=Math.max(...allV)||1,rng=max-min||1;
+  const pad={t:10,r:8,b:26,l:54};const iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const n=labels.length,px=i=>pad.l+i/(n-1)*iw,py=v=>pad.t+ih-(v-min)/rng*ih;
+  const ticks=Array.from({length:5},(_,i)=>min+rng*i/4);
+  return`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">
+  ${ticks.map(t=>`<line x1="${pad.l}" x2="${pad.l+iw}" y1="${py(t)}" y2="${py(t)}" stroke="rgba(255,255,255,0.05)"/>
+  <text x="${pad.l-4}" y="${py(t)+4}" text-anchor="end" fill="rgba(255,255,255,0.3)" font-size="9" font-family="system-ui">${fi(t,true)}</text>`).join('')}
+  ${series.map(sr=>`<polyline points="${sr.vals.map((v,i)=>px(i)+','+py(v)).join(' ')}" fill="none" stroke="${sr.color}" stroke-width="2" stroke-linejoin="round"/>`).join('')}
+  ${labels.map((l,i)=>`<text x="${px(i)}" y="${h-4}" text-anchor="middle" fill="rgba(255,255,255,0.28)" font-size="9" font-family="system-ui">${l}</text>`).join('')}
+  </svg>`;
+}
+function svgRadar(scores,labels){
+  const keys=Object.keys(scores),n=keys.length,cx=120,cy=108,r=78;
+  const pt=i=>{const a=i/n*2*Math.PI-Math.PI/2;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};};
+  const webs=[.25,.5,.75,1].map(f=>{const pp=Array.from({length:n},(_,i)=>{const p=pt(i);return(cx+(p.x-cx)*f)+','+(cy+(p.y-cy)*f);}).join(' ');return`<polygon points="${pp}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;});
+  const spokes=Array.from({length:n},(_,i)=>{const p=pt(i);return`<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="rgba(255,255,255,0.07)"/>`;});
+  const scPts=keys.map((_,i)=>{const p=pt(i);const v=(scores[keys[i]]||0)/100;return(cx+(p.x-cx)*v)+','+(cy+(p.y-cy)*v);}).join(' ');
+  const lbls=labels.map((l,i)=>{const p=pt(i);const lx=cx+(p.x-cx)*1.22,ly=cy+(p.y-cy)*1.22;return`<text x="${lx}" y="${ly+4}" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="9" font-family="system-ui">${l}</text>`;});
+  return`<svg viewBox="0 0 240 216" style="width:100%" class="rsv">${webs.join('')}${spokes.join('')}<polygon points="${scPts}" fill="rgba(139,92,246,0.2)" stroke="var(--p)" stroke-width="1.5"/>${keys.map((_,i)=>{const p=pt(i);const v=(scores[keys[i]]||0)/100;return`<circle cx="${cx+(p.x-cx)*v}" cy="${cy+(p.y-cy)*v}" r="3" fill="var(--p)"/>`;}).join('')}${lbls.join('')}</svg>`;
+}
+function miniSpark(vals,color){
+  if(!vals||vals.length<2)return'';
+  const min=Math.min(...vals),max=Math.max(...vals),rng=max-min||1;
+  const w=140,h=30,pad=2;
+  const px=i=>pad+i/(vals.length-1)*(w-pad*2),py=v=>h-pad-(v-min)/rng*(h-pad*2);
+  return`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:28px"><polyline points="${vals.map((v,i)=>px(i)+','+py(v)).join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" opacity=".6"/><circle cx="${px(vals.length-1)}" cy="${py(vals[vals.length-1])}" r="2.5" fill="${color}"/></svg>`;
+}
+
+// ─── WIZARD ──────────────────────────────
+function wNext(s){document.getElementById('ws'+s).classList.remove('on');document.getElementById('ws'+(s+1)).classList.add('on');}
+function wBack(s){document.getElementById('ws'+s).classList.remove('on');document.getElementById('ws'+(s-1)).classList.add('on');}
+function selMode(m){startMode=m;document.getElementById('sblank').className='sopt'+(m==='blank'?' sel':'');document.getElementById('sdemo').className='sopt'+(m==='demo'?' sel':'');}
+function wSkip(){launchApp();}
+function wFinish(){
+  const nm=document.getElementById('wn').value.trim();if(nm)S.cfg.name=nm;
+  const age=parseInt(document.getElementById('wa').value);if(!isNaN(age))S.cfg.age=age;
+  const inf=parseFloat(document.getElementById('winf').value);if(!isNaN(inf))S.cfg.inflation=inf;
+  S.cfg.emMonths=parseInt(document.getElementById('wem').value)||6;
+  const ra=parseInt(document.getElementById('wra').value);if(!isNaN(ra))S.cfg.retireAge=ra;
+  const inc=parseFloat(document.getElementById('wi').value);
+  if(startMode==='demo')loadDemo();
+  else if(!isNaN(inc)&&inc>0)S.cfLog.push({id:uid(),date:today(),catId:'salary',type:'income',amt:inc,note:'Monthly salary',recur:true});
+  save();launchApp();
+}
+function launchApp(){
+  document.getElementById('wiz').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('fab').style.display='flex';
+  render('cc');if(S.cfg.name)toast('Welcome, '+S.cfg.name+'!','ok');
+}
+
+// ─── DEMO DATA ────────────────────────────
+function loadDemo(){
+  S.cfg={...S.cfg,name:'Subham',age:32,inflation:6,emMonths:6,retireAge:55,lifeExp:85};
+  S.fs={...S.fs,retireAge:55,lifeExp:85,wRate:4,target:50000000};S.fs.base.ret=11;
+  const now=new Date();
+  // Accounts
+  S.accounts=[
+    {id:'acc-daily',name:'HDFC Daily Account',type:'daily',balance:48000,emPortion:0,liquidPortion:0,note:'Salary credited here. All expenses and SIPs flow from this account.'},
+    {id:'acc-sav',name:'HDFC Savings Account',type:'savings',balance:310000,emPortion:180000,liquidPortion:130000,note:'Emergency fund: ₹1.8L earmarked. Remaining ₹1.3L is liquid buffer.'}
+  ];
+  // Wealth log
+  const catV={mf:[800000,880000,960000,1060000,1150000,1280000],stocks:[190000,175000,205000,215000,229000,230000],usstocks:[85000,92000,88000,101000,108000,115000],nps:[120000,128000,136000,144000,152000,161000],pf:[450000,465000,480000,495000,511000,526000],ppf:[260000,265000,270000,276000,281000,285000],fd:[200000,200000,200000,215000,215000,215000],gold:[90000,94000,98000,110000,118000,134000]};
+  Object.entries(catV).forEach(([cat,vals])=>{vals.forEach((v,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,28);S.wealthLog.push({id:uid(),catId:cat,date:d.toISOString().slice(0,10),value:v,note:'Monthly update'});});});
+  // CF log
+  for(let m=0;m<4;m++){
+    const d=new Date(now.getFullYear(),now.getMonth()-m,1);
+    const base=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    [{catId:'salary',type:'income',amt:225000,note:'Net salary',recur:true},
+     {catId:'mf_sip',type:'investment',amt:45000,note:'Monthly SIP',recur:true},
+     {catId:'pf_cont',type:'investment',amt:15000,note:'EPF',recur:true},
+     {catId:'housing',type:'expense',amt:28500,note:'Home loan EMI',recur:true},
+     {catId:'food',type:'expense',amt:16000,note:'Groceries + BigBasket',recur:true},
+     {catId:'transport',type:'expense',amt:5500,note:'Uber + fuel',recur:true},
+     {catId:'utilities',type:'expense',amt:8500,note:'Electricity + internet',recur:true},
+     {catId:'leisure',type:'expense',amt:m===0?14000:10000,note:'Dining out',recur:false},
+     {catId:'shopping',type:'expense',amt:m===1?18000:6000,note:'Clothing',recur:false},
+    ].forEach((e,i)=>S.cfLog.push({id:uid(),date:`${base}-${String(5+i).padStart(2,'0')}`,type:e.type,catId:e.catId,amt:e.amt,note:e.note,recur:e.recur||false}));
+    if(m===0)S.cfLog.push({id:uid(),date:`${base}-15`,type:'income',catId:'bonus',amt:50000,note:'Quarterly bonus',recur:false});
+    if(m===2)S.cfLog.push({id:uid(),date:`${base}-20`,type:'expense',catId:'health',amt:4500,note:'Health checkup',recur:false});
+  }
+  // Liabilities
+  S.liabs=[{id:uid(),name:'SBI Home Loan',type:'homeloan',prin:2750000,rate:8.75,emi:28500,mat:'2040-03-31',notes:''}];
+  // Snapshots — net worth is investments + account balances - liabilities
+  [{mo:5,nw:1445000},{mo:4,nw:1605000},{mo:3,nw:1767000},{mo:2,nw:1921000},{mo:1,nw:2030000},{mo:0,nw:2184000}].forEach(s=>{
+    const d=new Date(now.getFullYear(),now.getMonth()-s.mo,28);
+    S.snaps.push({id:uid(),date:d.toISOString().slice(0,10),assets:s.nw+2750000,liabs:2750000,nw:s.nw,notes:'Monthly snapshot'});
+  });
+  S.goals=[
+    {id:uid(),name:'Retirement Corpus',type:'retirement',pri:'high',target:50000000,tDate:'2048-03-31',earmark:1800000,xRet:11,inf:6,mContrib:30000,stepUp:10,notes:''},
+    {id:uid(),name:'Europe Vacation 2026',type:'vacation',pri:'medium',target:500000,tDate:'2026-06-30',earmark:120000,xRet:6.5,inf:6,mContrib:20000,stepUp:0,notes:''}
+  ];
+  S.trips=[{id:uid(),name:'Rajasthan Heritage',dest:'Jaipur, Jodhpur, Udaipur',country:'India',dom:true,sDate:'2024-12-20',eDate:'2024-12-27',pax:2,budget:80000,notes:'Annual trip',inCF:false,exps:[
+    {id:uid(),date:'2024-12-20',cat:'Flights',amt:18000,desc:'Return flights'},
+    {id:uid(),date:'2024-12-21',cat:'Hotels',amt:28000,desc:'7 nights'},
+    {id:uid(),date:'2024-12-22',cat:'Food',amt:12000,desc:'All meals'},
+    {id:uid(),date:'2024-12-23',cat:'Sightseeing',amt:8000,desc:'Entry tickets'},
+  ]}];
+  S.journal=[{id:uid(),date:'2025-01-15',title:'Started SIP Step-Up',cat:'Investment Decision',notes:'Increasing SIP by 10% every April. Target ₹1L/month by FY2030.',snapId:null}];
+}
+// ─── NAVIGATION & TAB SYSTEM ─────────────
+const PGTITLES={cc:'Command Center',cf:'Cash Flow',mw:'My Wealth',fp:'Future Planning',mr:'My Records'};
+function nav(page,el){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  if(el)el.classList.add('on');
+  document.getElementById('pgtit').textContent=PGTITLES[page]||page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pg-'+page).classList.add('active');
+  curPage=page;
+  switch(page){case'cc':renderCC();break;case'cf':renderCF();break;case'mw':renderMW();break;case'fp':renderFP();break;case'mr':renderMR();break;}
+  updateFresh();closeFab();
+}
+function render(page){nav(page,document.querySelector('[data-pg='+page+']'));}
+function gotoSettings(){render('mr');setTimeout(()=>setTab('mr-tabs','settings'),80);}
+function toggleNav(){document.getElementById('sb').classList.toggle('slim');}
+function updateFresh(){
+  const dates=[...S.wealthLog.map(e=>e.date),...S.cfLog.map(e=>e.date),...S.accounts.map(a=>today())].filter(Boolean).sort().reverse();
+  document.getElementById('ftxt').textContent=dates.length?'Updated '+fd(dates[0]):'No data yet';
+}
+// Scoped tab system — each tab group uses unique data attributes
+function setTab(gid,tid){
+  const g=document.getElementById(gid);if(!g)return;
+  g.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const tab=g.querySelector('[data-tab="'+tid+'"]');if(tab)tab.classList.add('on');
+  document.querySelectorAll('[data-tg="'+gid+'"]').forEach(p=>{p.style.display='none';p.classList.remove('on');});
+  const panel=document.querySelector('[data-tg="'+gid+'"][data-tp="'+tid+'"]');
+  if(panel){panel.style.display='block';panel.classList.add('on');}
+}
+function mkTabs(gid,tabs,def){
+  const bar=`<div class="tabs" id="${gid}">${tabs.map(t=>`<div class="tab${t.id===def?' on':''}" data-tab="${t.id}" onclick="setTab('${gid}','${t.id}')">${t.label}</div>`).join('')}</div>`;
+  const panels=tabs.map(t=>`<div data-tg="${gid}" data-tp="${t.id}" style="display:${t.id===def?'block':'none'}">${t.content}</div>`).join('');
+  return bar+panels;
+}
+
+// ─── UTILITY TEMPLATES ───────────────────
+function kpi(lbl,val,sub,extra,rgb,icon){return`<div class="kpi"><div class="ki" style="background:rgba(${rgb.join(',')},0.12)"><svg viewBox="0 0 24 24" stroke="rgb(${rgb.join(',')})" stroke-width="1.8" fill="none">${icon}</svg></div><div class="kl">${lbl}</div><div class="kv">${val}</div><div class="ks">${sub}</div>${extra||''}</div>`;}
+function emptyState(ttl,txt,btn){return`<div class="empty"><div class="ei"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="ettl">${ttl}</div><div class="etxt">${txt}</div>${btn||''}</div>`;}
+function emptyRow(cols,msg){return`<tr><td colspan="${cols}" style="text-align:center;padding:28px;color:var(--t2);font-size:12px">${msg}</td></tr>`;}
+function bbrRow(lbl,val,tot,color){return`<div class="bbr"><div class="bbl">${lbl}</div><div class="bbb"><div class="bbf" style="width:${tot?(Math.min(100,val/tot*100)).toFixed(0):0}%;background:${color}"></div></div><div class="bbv">${fi(val,true)}</div><div class="bbp">${tot?(Math.min(100,val/tot*100)).toFixed(0):0}%</div></div>`;}
+function dataNeedsNote(n,what){return`<div class="dsrc"><div class="dsrcd" style="background:var(--warn)"></div>This view needs ${n}+ ${what}. Capture more to unlock this visualization.</div>`;}
+
+// ─── COMMAND CENTER ──────────────────────
+function renderCC(){
+  const N=netWorthCalc(),em=emFund(),sc=healthScores();
+  const snaps=S.snaps.slice(-12);
+  const prev=snaps.length>=2?snaps[snaps.length-2]:null;
+  const nwChg=prev?N.nw-prev.nw:null,nwPct=prev&&prev.nw>0?nwChg/prev.nw*100:null;
+  const inc=monthlyIncomeEst(),inv=monthlyInvestmentEst(),exp3=monthlyExpenseActual(3);
+  const ir=inc>0?inv/inc*100:0;
+  const goalsPct=S.goals.length>0?S.goals.reduce((s,g)=>s+goalCalc(g).pct,0)/S.goals.length:null;
+  const now=new Date();
+  const cfMo=Array.from({length:4},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-3+i,1);const mk=mkey(d);return{lbl:d.toLocaleDateString('en-IN',{month:'short'}),inc:S.cfLog.filter(e=>e.type==='income'&&mkey(e.date)===mk).reduce((s,e)=>s+e.amt,0),exp:S.cfLog.filter(e=>e.type==='expense'&&mkey(e.date)===mk).reduce((s,e)=>s+e.amt,0),inv:S.cfLog.filter(e=>e.type==='investment'&&mkey(e.date)===mk).reduce((s,e)=>s+e.amt,0)};});
+  const allocData=buildAllocData();
+  const pulse=genPulse(N,em,nwChg,ir,exp3,inc);
+  const el=document.getElementById('pg-cc');
+  el.innerHTML=`
+  <div class="sh"><div><div class="sttl">${S.cfg.name?'Hello, '+S.cfg.name:'Command Center'}</div><div class="ssub">${fd(new Date())} — Your complete financial position</div></div></div>
+  <div class="kg">
+    ${kpi('Net Worth',fi(N.nw,true),fi(N.nw),nwChg!==null?chip(nwChg,nwPct):'',[139,92,246],'<path d="M12 2L2 7l10 5 10-5-10-5M2 17l10 5 10-5M2 12l10 5 10-5"/>')}
+    ${kpi('Total Assets',fi(N.assets,true),'Investments + accounts','',[6,182,212],'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>')}
+    ${kpi('Liabilities',fi(N.liabs,true),fi(N.liabs),'',[244,63,94],'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')}
+    ${kpi('Monthly Income',fi(inc,true),'3-month avg','',[16,185,129],'<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>')}
+    ${kpi('Monthly Invested',fi(inv,true),'3-month avg',ir>0?`<span class="chip ${ir>=20?'cp':ir>=10?'cw':'cn'}">${ir.toFixed(0)}% of income</span>`:'',[139,92,246],'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>')}
+    ${kpi('Monthly Expenses',fi(exp3||Math.max(0,inc-inv),true),exp3>0?'3-month avg':'Estimated','',exp3>0&&inc>0&&exp3/inc>0.7?[244,63,94]:[245,158,11],'<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>')}
+    ${kpi('Emergency Fund',fi(em.alloc,true),em.months.toFixed(1)+' of '+S.cfg.emMonths+' months covered','<div class="prog mt4" style="height:4px"><div class="pf '+(em.months>=S.cfg.emMonths?'pfg':'')+'" style="width:'+Math.min(100,em.months/S.cfg.emMonths*100).toFixed(0)+'%"></div></div>',em.months>=S.cfg.emMonths?[16,185,129]:[245,158,11],'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>')}
+    ${kpi('Goal Progress',goalsPct!==null?goalsPct.toFixed(0)+'%':'—',S.goals.length+' active goals',goalsPct!==null?`<div class="prog mt4" style="height:4px"><div class="pf" style="width:${goalsPct.toFixed(0)}%"></div></div>`:'',[139,92,246],'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>')}
+    ${kpi('Investable Portfolio',fi(N.investments,true),'Excl. bank accounts','',[99,102,241],'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>')}
+    ${kpi('Debt Ratio',N.assets>0?(N.liabs/N.assets*100).toFixed(0)+'%':'—','Liabilities to assets','',N.assets>0&&N.liabs/N.assets<0.4?[16,185,129]:[244,63,94],'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')}
+  </div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="chd"><div class="ctit">Net Worth Journey</div><span class="badge bg-gray">${snaps.length} snapshots</span></div>
+      ${svgLine(snaps.map(s=>s.nw),600,200,'#8b5cf6',true,snaps.map(s=>fmy(s.date)))}
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">Asset Allocation</div></div>
+      ${allocData.length?svgDonut(allocData,320,130,88,62):emptyState('No data','Update categories in My Wealth')}
+      ${allocData.length?`<div class="flex g8 mt8" style="flex-wrap:wrap">${allocData.slice(0,7).map(d=>`<div class="flex fi2 g4p" style="font-size:10px"><div style="width:7px;height:7px;border-radius:50%;background:${d.color};flex-shrink:0"></div><span style="color:var(--t1)">${d.label.split(' ')[0]}</span><span style="font-weight:600">${fi(d.val,true)}</span></div>`).join('')}</div>`:''}
+    </div>
+  </div>
+  <div class="g3 mb16">
+    <div class="card">
+      <div class="chd"><div class="ctit">Income, Expenses & Investments</div><div class="muted" style="font-size:10px">4 months</div></div>
+      ${svgBars(cfMo.map(m=>m.lbl),[cfMo.map(m=>m.inc),cfMo.map(m=>m.exp),cfMo.map(m=>m.inv)],400,180,['var(--pos)','var(--neg)','var(--c1)'])}
+      <div class="flex g12 mt8"><div class="flex fi2 g4p" style="font-size:10px"><div style="width:8px;height:3px;background:var(--pos)"></div>Income</div><div class="flex fi2 g4p" style="font-size:10px"><div style="width:8px;height:3px;background:var(--neg)"></div>Expenses</div><div class="flex fi2 g4p" style="font-size:10px"><div style="width:8px;height:3px;background:var(--c1)"></div>Invested</div></div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">Financial Health</div><button class="btn bg bsm" onclick="showHealthDetail()">Details</button></div>
+      ${svgRadar(sc,['Savings','Liquidity','Diversity','Emergency','Goals','Debt'])}
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">Financial Pulse</div><span class="badge bg-p">Live</span></div>
+      ${pulse.map(p=>`<div class="pli"><div class="pld" style="background:${p.c}"></div><div class="plt">${p.t}</div></div>`).join('')}
+      ${pulse.length===0?'<div class="muted mt8" style="font-size:11px">Add wealth and income data to see personalized insights.</div>':''}
+    </div>
+  </div>
+  <div class="g2 mb16">
+    <div class="card"><div class="chd"><div class="ctit">Wealth Composition</div></div>${renderComposition(N)}</div>
+    <div class="card"><div class="chd"><div class="ctit">Milestones</div></div>${renderMilestones(N.nw)}</div>
+  </div>
+  <div class="card mb16">
+    <div class="chd"><div class="ctit">Quick Actions</div></div>
+    <div class="flex g8" style="flex-wrap:wrap">
+      <button class="btn bs" onclick="openCFEntry('income')"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>Log Income</button>
+      <button class="btn bs" onclick="openCFEntry('expense')"><svg viewBox="0 0 24 24"><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Log Expense</button>
+      <button class="btn bs" onclick="openUpdateWealth()"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Update Wealth</button>
+      <button class="btn bs" onclick="openUpdateAccounts()"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/></svg>Update Accounts</button>
+      <button class="btn bs" onclick="openSnap()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M4 8h2l2-3h8l2 3h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"/></svg>Capture Snapshot</button>
+      <button class="btn bs" onclick="render('fp')"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Wealth Forecast</button>
+      <button class="btn bp" onclick="genReport()"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Financial Summary</button>
+    </div>
+  </div>`;
+}
+function buildAllocData(){
+  const cats=S.activeCats.map(id=>{const c=ALL_WCATS.find(x=>x.id===id);if(!c)return null;return{label:c.label,val:latestCatVal(id).value||0,color:c.color};}).filter(Boolean).filter(d=>d.val>0);
+  // Add account balances to alloc
+  const dailyB=dailyAcctBal(),emB=emFromAccts(),liqB=liqFromAccts();
+  if(dailyB>0)cats.push({label:'Daily Account',val:dailyB,color:'var(--pos)'});
+  if(emB>0)cats.push({label:'Emergency Fund',val:emB,color:'var(--warn)'});
+  if(liqB>0)cats.push({label:'Liquid Buffer',val:liqB,color:'var(--c2)'});
+  return cats.sort((a,b)=>b.val-a.val);
+}
+function genPulse(N,em,nwChg,ir,exp3,inc){
+  const items=[];
+  if(nwChg!==null)items.push({c:nwChg>=0?'var(--pos)':'var(--neg)',t:`Net worth <strong>${nwChg>=0?'grew':'declined'} by ${fi(Math.abs(nwChg),true)}</strong> since the previous snapshot.`});
+  if(ir>0)items.push({c:ir>=20?'var(--pos)':ir>=10?'var(--warn)':'var(--neg)',t:`You are investing <strong>${ir.toFixed(0)}% of income</strong>. ${ir>=20?'Excellent discipline.':ir>=10?'On track.':'Consider increasing your investment rate.'}`});
+  if(exp3>0&&inc>0){const er=exp3/inc*100;items.push({c:er<=50?'var(--pos)':er<=70?'var(--warn)':'var(--neg)',t:`Monthly expenses are <strong>${fi(exp3,true)}</strong> — ${er.toFixed(0)}% of income.`});}
+  if(em.monthly>0)items.push({c:em.months>=S.cfg.emMonths?'var(--pos)':'var(--warn)',t:`Emergency fund covers <strong>${em.months.toFixed(1)} months</strong> of expenses. Target: ${S.cfg.emMonths} months.`});
+  const atRisk=S.goals.filter(g=>{const gc=goalCalc(g);return gc.shortfall>0&&gc.pct<50;});
+  if(atRisk.length)items.push({c:'var(--warn)',t:`<strong>${atRisk.length} goal${atRisk.length>1?'s are':' is'}</strong> less than 50% funded and may fall short.`});
+  return items.slice(0,5);
+}
+function renderComposition(N){
+  if(!N.assets)return emptyState('No data','Update categories in My Wealth');
+  const em=emFromAccts(),liq=liqFromAccts(),daily=dailyAcctBal();
+  const mkt=S.activeCats.filter(id=>ALL_WCATS.find(c=>c.id===id)?.group==='market').reduce((s,id)=>s+(latestCatVal(id).value||0),0);
+  const ret=S.activeCats.filter(id=>ALL_WCATS.find(c=>c.id===id)?.group==='retirement').reduce((s,id)=>s+(latestCatVal(id).value||0),0);
+  const ill=S.activeCats.filter(id=>ALL_WCATS.find(c=>c.id===id)?.group==='illiquid').reduce((s,id)=>s+(latestCatVal(id).value||0),0);
+  const liqTotal=daily+em+liq+S.activeCats.filter(id=>ALL_WCATS.find(c=>c.id===id)?.group==='liquid').reduce((s,id)=>s+(latestCatVal(id).value||0),0);
+  const tot=N.assets||1;
+  return[{l:'Liquid / Accessible',v:liqTotal,c:'var(--c2)'},{l:'Market-Linked',v:mkt,c:'var(--c1)'},{l:'Retirement / Restricted',v:ret,c:'var(--pos)'},{l:'Illiquid',v:ill,c:'var(--c4)'}].filter(x=>x.v>0).map(x=>bbrRow(x.l,x.v,tot,x.c)).join('');
+}
+function renderMilestones(nw){
+  return S.cfg.milestones.map((m,idx)=>{
+    const done=nw>=m,isCur=!done&&(idx===0||nw>=S.cfg.milestones[idx-1]);
+    const pct=Math.min(100,nw/m*100);
+    const lbl=m>=1e7?'₹'+(m/1e7).toFixed(0)+'Cr':m>=1e5?'₹'+(m/1e5).toFixed(0)+'L':'₹'+(m/1e3).toFixed(0)+'K';
+    return`<div class="msi"><div class="msr ${done?'done':isCur?'cur':''}">${done?'<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"/></svg>':idx+1}</div>
+    <div style="flex:1"><div style="font-size:12px;font-weight:600;color:${done?'var(--pos)':isCur?'var(--t0)':'var(--t2)'}">${lbl}</div>${isCur?`<div class="prog mt4" style="height:3px"><div class="pf" style="width:${pct.toFixed(0)}%"></div></div>`:''}</div>
+    ${done?'<span class="badge bg-g" style="font-size:9px">Achieved</span>':isCur?`<span style="font-size:10px;color:var(--t2)">${pct.toFixed(0)}%</span>`:''}
+    </div>`;
+  }).join('');
+}
+function showHealthDetail(){
+  const sc=healthScores();
+  const dims=[{k:'savings',l:'Investment Discipline',d:'Investment rate vs 20% benchmark'},{k:'liquidity',l:'Liquidity',d:'Liquid assets (accounts + liquid categories) as % of total'},{k:'diversity',l:'Diversification',d:'Active investment categories (max 7)'},{k:'emergency',l:'Emergency Readiness',d:'Months covered vs target'},{k:'goals',l:'Goal Funding',d:'Average % funded across all goals'},{k:'debt',l:'Debt Management',d:'1 − liabilities/assets × 100'}];
+  showInfo('Financial Health Breakdown',`<div class="muted mb12" style="font-size:11px">All scores 0–100. N/A = data not entered yet.</div>`+dims.map(d=>{const v=sc[d.k];const c=v===null?'var(--t2)':v>=70?'var(--pos)':v>=40?'var(--warn)':'var(--neg)';return`<div class="mb12"><div class="flex jb fi2 mb4"><div style="font-size:13px;font-weight:600">${d.l}</div><div style="font-size:18px;font-weight:700;color:${c}">${v!==null?v.toFixed(0):'N/A'}</div></div><div class="prog mb4"><div class="pf" style="width:${v||0}%;background:${c}"></div></div><div style="font-size:10.5px;color:var(--t2)">${d.d}</div></div>`;}).join(''));
+}
+
+// ─── CASH FLOW ───────────────────────────
+function renderCF(){
+  document.getElementById('pg-cf').innerHTML=mkTabs('cf-tabs',[
+    {id:'cf-ov',label:'Overview',content:renderCFOv()},
+    {id:'cf-exp',label:'Expenses',content:renderCFExpenses()},
+    {id:'cf-acct',label:'My Accounts',content:renderCFAccounts()},
+    {id:'cf-log',label:'Full Log',content:renderCFLog()},
+  ],'cf-ov');
+}
+function renderCFOv(){
+  const now=new Date();
+  const months=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);const mk=mkey(d);const get=t=>S.cfLog.filter(e=>e.type===t&&mkey(e.date)===mk).reduce((s,e)=>s+e.amt,0);return{lbl:d.toLocaleDateString('en-IN',{month:'short'}),inc:get('income'),exp:get('expense'),inv:get('investment')};});
+  const inc=monthlyIncomeEst(),inv=monthlyInvestmentEst(),exp3=monthlyExpenseActual(3);
+  const thisM=cfThisMonth();
+  const incByCat=CFCATS.filter(c=>c.type==='income').map(c=>({...c,val:S.cfLog.filter(e=>e.catId===c.id&&mkey(e.date)===mkey()).reduce((s,e)=>s+e.amt,0)})).filter(d=>d.val>0);
+  const invByCat=CFCATS.filter(c=>c.type==='investment').map(c=>({...c,val:S.cfLog.filter(e=>e.catId===c.id&&mkey(e.date)===mkey()).reduce((s,e)=>s+e.amt,0)})).filter(d=>d.val>0);
+  const expByCat=CFCATS.filter(c=>c.type==='expense').map(c=>({...c,val:S.cfLog.filter(e=>e.catId===c.id&&mkey(e.date)===mkey()).reduce((s,e)=>s+e.amt,0)})).filter(d=>d.val>0);
+  return`
+  <div class="kg" style="grid-template-columns:repeat(4,1fr)">
+    ${kpi('Avg. Monthly Income',fi(inc,true),'3-month average','',[16,185,129],'<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>')}
+    ${kpi('Avg. Monthly Expenses',fi(exp3||Math.max(0,inc-inv),true),exp3>0?'3-month average':'Estimated','',exp3>0?[244,63,94]:[245,158,11],'<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>')}
+    ${kpi('Avg. Monthly Invested',fi(inv,true),'3-month average',inc>0&&inv>0?`<span class="chip ${inv/inc>=.2?'cp':'cw'}">${(inv/inc*100).toFixed(0)}% of income</span>`:'',[139,92,246],'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>')}
+    ${kpi('Monthly Surplus',fi(thisM.surplus),thisM.surplus>=0?'Saved after all outflows':'Overspent this month',thisM.surplus>=0?`<span class="chip cp">Surplus</span>`:`<span class="chip cn">Deficit</span>`,thisM.surplus>=0?[16,185,129]:[244,63,94],'<path d="M23 6l-9.5 9.5-5-5L1 18"/>')}
+  </div>
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chd"><div class="ctit">6-Month Overview</div></div>
+      ${svgBars(months.map(m=>m.lbl),[months.map(m=>m.inc),months.map(m=>m.exp),months.map(m=>m.inv)],500,190,['var(--pos)','var(--neg)','var(--c1)'])}
+      <div class="flex g12 mt8"><div class="flex fi2 g4p" style="font-size:10px"><div style="width:8px;height:3px;background:var(--pos)"></div>Income</div><div class="flex fi2 g4p" style="font-size:10px"><div style="width:8px;height:3px;background:var(--neg)"></div>Expenses</div><div class="flex fi2 g4p" style="font-size:10px"><div style="width:8px;height:3px;background:var(--c1)"></div>Invested</div></div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">${now.toLocaleDateString('en-IN',{month:'long',year:'numeric'})}</div><button class="btn bp bsm" onclick="openCFEntry()">+ Log</button></div>
+      ${incByCat.length?`<div class="muted mb8" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Income</div>${incByCat.map(x=>`<div class="cfi"><div class="cfil">${x.icon} ${x.label}</div><div class="cfiv pos">+${fi(x.val)}</div></div>`).join('')}`:''}
+      ${invByCat.length?`<div class="muted mb8 mt8" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Invested</div>${invByCat.map(x=>`<div class="cfi"><div class="cfil">${x.icon} ${x.label}</div><div class="cfiv" style="color:var(--c1)">${fi(x.val)}</div></div>`).join('')}`:''}
+      ${expByCat.length?`<div class="muted mb8 mt8" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Expenses</div>${expByCat.map(x=>`<div class="cfi"><div class="cfil">${x.icon} ${x.label}</div><div class="cfiv neg">-${fi(x.val)}</div></div>`).join('')}`:''}
+      ${!incByCat.length&&!invByCat.length&&!expByCat.length?'<div class="muted" style="font-size:11px;padding:8px 0">Nothing logged yet this month.</div>':''}
+      <div class="div"></div>
+      <div class="cfi"><div class="cfil" style="font-weight:600">Surplus (inc − exp − inv)</div><div class="cfiv ${thisM.surplus>=0?'pos':'neg'}">${fi(thisM.surplus)}</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ctit">Where Income Goes</div><div class="muted" style="font-size:10px">3-month averages</div></div>
+    ${inc>0?[{l:'Invested',v:inv,c:'var(--c1)'},{l:'Expenses',v:exp3||Math.max(0,inc-inv),c:'var(--neg)'},{l:'Surplus',v:Math.max(0,inc-inv-(exp3||0)),c:'var(--pos)'}].filter(x=>x.v>0).map(x=>bbrRow(x.l,x.v,inc,x.c)).join(''):emptyState('No income data','Log income entries to see breakdown')}
+    ${!exp3&&inc>0?'<div class="muted mt8" style="font-size:10.5px">Expenses estimated. Log actual expense categories for accuracy.</div>':''}
+  </div>`;
+}
+function renderCFExpenses(){
+  const now=new Date();
+  const months=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);const mk=mkey(d);return{lbl:d.toLocaleDateString('en-IN',{month:'short'}),exp:S.cfLog.filter(e=>e.type==='expense'&&mkey(e.date)===mk).reduce((s,e)=>s+e.amt,0)};});
+  const hasData=S.cfLog.some(e=>e.type==='expense');
+  const allTime=S.cfLog.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const exp3=monthlyExpenseActual(3),inc=monthlyIncomeEst();
+  const catTotals=CFCATS.filter(c=>c.type==='expense').map(c=>({...c,total:S.cfLog.filter(e=>e.catId===c.id).reduce((s,e)=>s+e.amt,0)})).filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
+  return`
+  <div class="flex jb fi2 mb12"><div class="muted" style="font-size:12px">Track where your money goes</div><button class="btn bp bsm" onclick="openCFEntry('expense')">+ Add Expense</button></div>
+  ${!hasData?`<div class="card">${emptyState('No expense data yet','Log major monthly expenses — housing, food, transport, utilities. You do not need every transaction, just the broad buckets.',`<button class="btn bp bsm mt12" onclick="openCFEntry('expense')">Add First Expense</button>`)}</div>`:`
+  <div class="kg" style="grid-template-columns:repeat(3,1fr)">
+    ${kpi('Avg. Monthly',fi(exp3,true),'3-month average','',[244,63,94],'<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>')}
+    ${kpi('Expense / Income',inc>0?(exp3/inc*100).toFixed(0)+'%':'—','% of monthly income','',[245,158,11],'<path d="M23 6l-9.5 9.5-5-5L1 18"/>')}
+    ${kpi('All-Time Logged',fi(allTime,true),S.cfLog.filter(e=>e.type==='expense').length+' entries','',[139,92,246],'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>')}
+  </div>
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chd"><div class="ctit">Monthly Expense Trend</div></div>
+      ${months.some(m=>m.exp>0)?svgLine(months.map(m=>m.exp),600,180,'var(--neg)',true,months.map(m=>m.lbl)):dataNeedsNote(2,'months of expense data')}
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">Spending by Category</div></div>
+      ${catTotals.length?svgDonut(catTotals.map(c=>({label:c.label,val:c.total,color:c.color})),320,130,88,62):emptyState('No data','Add expense entries')}
+    </div>
+  </div>
+  <div class="card mb12">
+    <div class="chd"><div class="ctit">Category Breakdown — All Time</div></div>
+    ${catTotals.map(c=>bbrRow(c.icon+' '+c.label,c.total,allTime,c.color)).join('')}
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ctit">Recent Entries</div><button class="btn bp bsm" onclick="openCFEntry('expense')">+ Add</button></div>
+    <div class="tw"><table><thead><tr><th>Date</th><th>Category</th><th>Note</th><th class="tr">Amount</th><th></th></tr></thead><tbody>
+    ${S.cfLog.filter(e=>e.type==='expense').slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12).map(e=>{const cat=CFCATS.find(c=>c.id===e.catId)||{label:e.catId,icon:'📝'};return`<tr><td class="tmono">${fd(e.date)}</td><td>${cat.icon} ${cat.label}</td><td class="sec trunc" style="max-width:180px">${e.note||'—'}</td><td class="tr tmono tneg">-${fi(e.amt)}</td><td><button class="btn bg bsm bico" onclick="delCF('${e.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td></tr>`;}).join('')||emptyRow(5,'No expense entries yet.')}
+    </tbody></table></div>
+  </div>`}`;
+}
+function renderCFAccounts(){
+  const daily=getAcct('daily'),sav=getAcct('savings');
+  const totalBal=S.accounts.reduce((s,a)=>s+(a.balance||0),0);
+  const emB=emFromAccts(),liqB=liqFromAccts();
+  const hasAccts=S.accounts.length>0;
+  return`
+  <div class="sh"><div><div style="font-size:16px;font-weight:700">My Bank Accounts</div><div class="ssub">Account balances automatically flow into My Wealth and the Emergency Fund calculation.</div></div><button class="btn bp bsm" onclick="openAccountSetup()">${hasAccts?'Edit Accounts':'Set Up Accounts'}</button></div>
+  ${!hasAccts?`<div class="card">${emptyState('No accounts configured','Set up your daily and savings accounts. Balances appear in My Wealth and feed the emergency fund calculation.',`<button class="btn bp bsm mt12" onclick="openAccountSetup()">Set Up My Accounts</button>`)}</div>`:`
+  <div class="g2 mb16">
+    ${daily?`<div class="accard" style="border-color:rgba(16,185,129,.2)">
+      <div style="font-size:10px;font-weight:600;color:var(--pos);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">💳 Daily / Salary Account</div>
+      <div style="font-size:19px;font-weight:700;margin-bottom:4px">${daily.name}</div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.5px;color:var(--pos);margin-bottom:10px">${fi(daily.balance,true)}</div>
+      <div class="muted mb12" style="font-size:11px">${daily.note||'Salary credited here. All expenses paid from this account.'}</div>
+      <div class="div"></div>
+      <div style="font-size:11px;color:var(--t1)">✅ Full balance shown in My Wealth</div>
+      <button class="btn bg bsm mt8" onclick="openUpdateAccount('${daily.id}')">Update Balance</button>
+    </div>`:'<div class="accard" style="border-style:dashed">${emptyState("No daily account","Add your salary account")}</div>'}
+    ${sav?`<div class="accard" style="border-color:rgba(139,92,246,.2)">
+      <div style="font-size:10px;font-weight:600;color:var(--p);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🏦 Savings Account</div>
+      <div style="font-size:19px;font-weight:700;margin-bottom:4px">${sav.name}</div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.5px;color:var(--p);margin-bottom:10px">${fi(sav.balance,true)}</div>
+      <div class="muted mb12" style="font-size:11px">${sav.note||'Split between emergency fund and liquid buffer.'}</div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:10px 12px;margin-bottom:10px">
+        ${bbrRow('🛡️ Emergency Fund',sav.emPortion||0,sav.balance,'var(--warn)')}
+        ${bbrRow('💧 Liquid Buffer',sav.liquidPortion||0,sav.balance,'var(--c2)')}
+      </div>
+      <div class="div"></div>
+      <div style="font-size:11px;color:var(--t1)">✅ Full balance shown in My Wealth<br>✅ Emergency Fund feeds Future Planning</div>
+      <button class="btn bg bsm mt8" onclick="openUpdateAccount('${sav.id}')">Update Balance & Splits</button>
+    </div>`:'<div class="accard" style="border-style:dashed">${emptyState("No savings account","Add your savings account")}</div>'}
+  </div>
+  <div class="kg" style="grid-template-columns:repeat(3,1fr)">
+    ${kpi('Total Account Balance',fi(totalBal,true),'Daily + Savings','',[6,182,212],'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>')}
+    ${kpi('Emergency Fund',fi(emB,true),'From savings account split','',[245,158,11],'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>')}
+    ${kpi('Liquid Buffer',fi(liqB,true),'Available beyond emergency fund','',[16,185,129],'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>')}
+  </div>
+  <div class="card mt12">
+    <div class="chd"><div class="ctit">Money Flow</div></div>
+    <div class="flex fi2 g8" style="flex-wrap:wrap;font-size:12px;padding:4px 0">
+      <div style="background:var(--pos2);border:1px solid rgba(16,185,129,.2);border-radius:var(--r);padding:8px 14px;font-weight:600;color:var(--pos)">💼 Salary</div>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--t2)" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      <div style="background:var(--pos2);border:1px solid rgba(16,185,129,.2);border-radius:var(--r);padding:8px 14px;font-weight:600;color:var(--pos)">${daily?daily.name:'Daily Account'}</div>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--t2)" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="background:var(--neg2);border:1px solid rgba(244,63,94,.2);border-radius:var(--r);padding:5px 12px;font-size:11px;color:var(--neg)">🛒 Daily expenses</div>
+        <div style="background:var(--pi);border:1px solid var(--bd2);border-radius:var(--r);padding:5px 12px;font-size:11px;color:var(--p)">📈 SIP / Investments</div>
+        <div style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);border-radius:var(--r);padding:5px 12px;font-size:11px;color:var(--c2)">→ Transfer to ${sav?sav.name:'Savings Account'}</div>
+      </div>
+    </div>
+  </div>`}`;
+}
+function renderCFLog(){
+  const log=S.cfLog.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const typeBadge={income:'bg-g',investment:'bg-p',expense:'bg-r'};
+  const typeSign={income:'+',expense:'-',investment:''};
+  const typeColor={income:'tpos',expense:'tneg',investment:''};
+  return`
+  <div class="flex jb fi2 mb12">
+    <div class="muted" style="font-size:12px">${log.length} entries</div>
+    <div class="flex g8">
+      <button class="btn bp bsm" onclick="openCFEntry('income')">+ Income</button>
+      <button class="btn bs bsm" onclick="openCFEntry('expense')">+ Expense</button>
+      <button class="btn bs bsm" onclick="openCFEntry('investment')">+ Investment</button>
+      <button class="btn bg bsm" onclick="exportCFCSV()">CSV</button>
+    </div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Note</th><th class="tr">Amount</th><th></th></tr></thead>
+    <tbody>
+    ${log.length?log.map(e=>{const cat=CFCATS.find(c=>c.id===e.catId)||{label:e.catId,icon:'',type:e.type};return`<tr>
+      <td class="tmono">${fd(e.date)}</td>
+      <td><span class="badge ${typeBadge[e.type]||'bg-gray'}">${e.type}</span></td>
+      <td>${cat.icon?cat.icon+' ':''}<span>${cat.label||e.catId}</span>${e.recur?'<span class="muted" style="margin-left:4px;font-size:10px">↻</span>':''}</td>
+      <td class="sec trunc" style="max-width:160px">${e.note||'—'}</td>
+      <td class="tr tmono ${typeColor[e.type]||''}">${typeSign[e.type]||''}${fi(e.amt)}</td>
+      <td><button class="btn bg bsm bico" onclick="delCF('${e.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td>
+    </tr>`;}).join(''):emptyRow(6,'No entries yet.')}
+    </tbody>
+  </table></div>`;
+}
+// ─── MY WEALTH ───────────────────────────
+function renderMW(){
+  document.getElementById('pg-mw').innerHTML=mkTabs('mw-tabs',[
+    {id:'mw-port',label:'Portfolio',content:renderMWPort()},
+    {id:'mw-hist',label:'Net Worth History',content:renderMWHist()},
+    {id:'mw-liab',label:'Liabilities',content:renderMWLiab()},
+  ],'mw-port');
+}
+
+// Get synthetic category value (derived from accounts)
+function synthVal(id){
+  if(id==='__salary_acct')return{value:dailyAcctBal(),date:today(),label:'Daily Account Balance'};
+  if(id==='__em_fund')return{value:emFromAccts(),date:today(),label:'Emergency Fund'};
+  if(id==='__savings_liq')return{value:liqFromAccts(),date:today(),label:'Savings — Liquid Buffer'};
+  return{value:0,date:null};
+}
+function allVisibleCats(){
+  // Returns active user categories + visible synth categories, each with value
+  const userCats=S.activeCats.map(id=>{
+    const cat=ALL_WCATS.find(c=>c.id===id);if(!cat)return null;
+    const lv=latestCatVal(id);
+    return{...cat,value:lv.value||0,date:lv.date,synth:false};
+  }).filter(Boolean);
+  const synthCats=(S.showSynthCats||[]).map(id=>{
+    const sc=SYNTH_CATS.find(c=>c.id===id);if(!sc)return null;
+    const sv=synthVal(id);
+    return{...sc,value:sv.value,date:sv.date,synth:true,xRet:sc.id==='__em_fund'?4:sc.id==='__savings_liq'?3.5:2};
+  }).filter(Boolean);
+  return[...userCats,...synthCats];
+}
+function renderMWPort(){
+  const N=netWorthCalc();const now=new Date();const staleThresh=30;
+  const cats=allVisibleCats();
+  const staleCats=cats.filter(c=>!c.synth&&c.date&&(now-new Date(c.date))/(864e5)>staleThresh&&c.value>0);
+  const hasAccts=S.accounts.length>0;
+  return`
+  <div class="kg" style="grid-template-columns:repeat(3,1fr)">
+    ${kpi('Total Assets',fi(N.assets,true),'Investments + all accounts','',[139,92,246],'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>')}
+    ${kpi('Net Worth',fi(N.nw,true),'Assets minus liabilities','',[16,185,129],'<path d="M12 2L2 7l10 5 10-5-10-5M2 17l10 5 10-5M2 12l10 5 10-5"/>')}
+    ${kpi('Investable Portfolio',fi(N.investments,true),'Excl. bank accounts','',[6,182,212],'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>')}
+  </div>
+  ${staleCats.length?`<div class="dsrc mb12"><div class="dsrcd" style="background:var(--warn)"></div><strong>${staleCats.length} categories</strong> not updated in 30+ days. Tap a card to update.</div>`:''}
+  ${!hasAccts?`<div class="dsrc mb12"><div class="dsrcd" style="background:var(--p)"></div>Set up your bank accounts in <a href="#" onclick="render('cf');setTimeout(()=>setTab('cf-tabs','cf-acct'),80)" style="color:var(--p)">Cash Flow → My Accounts</a> to see your account balances here automatically.</div>`:''}
+  <div class="flex jb fi2 mb12">
+    <div class="sec" style="font-size:11.5px">Tap any card to update. Hover to remove. <button class="btn bg bsm" onclick="openManageCats()">Manage categories</button></div>
+    <button class="btn bp bsm" onclick="openUpdateWealth()">Update All</button>
+  </div>
+  <div class="ga">${cats.map(c=>renderWealthCard(c,now,staleThresh)).join('')}</div>
+  <div class="card mt12">
+    <div class="chd"><div class="ctit">Allocation — All Assets</div></div>
+    ${buildAllocData().map(d=>bbrRow(d.label,d.val,N.assets,d.color)).join('')||emptyState('No data','Update category values above')}
+  </div>`;
+}
+function renderWealthCard(c,now,staleThresh){
+  const isStale=!c.synth&&c.date&&(now-new Date(c.date))/(864e5)>staleThresh&&c.value>0;
+  const hist=c.synth?[]:S.wealthLog.filter(e=>e.catId===c.id).sort((a,b)=>a.date.localeCompare(b.date)).slice(-6);
+  const prev=hist.length>=2?hist[hist.length-2].value:null;
+  const chg=prev!==null?c.value-prev:null;
+  const isSynth=c.synth;
+  return`<div class="wcat ${isStale?'stale':''} ${isSynth?'special':''}" onclick="${isSynth?`openUpdateAccounts()`:`openCatUpdate('${c.id}')`}">
+    ${!isSynth?`<button class="wcat-del btn bdanger bsm bico" onclick="event.stopPropagation();removeCat('${c.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}
+    <span class="wcat-ico">${c.icon}</span>
+    <div class="wcat-name">${c.label}${isSynth?'<span class="badge bg-p" style="margin-left:5px;font-size:9px">Account</span>':''}</div>
+    <div class="wcat-val">${c.value>0?fi(c.value,true):'Not set'}</div>
+    ${chg!==null&&c.value>0?`<div style="font-size:10.5px;margin-top:2px;color:${chg>=0?'var(--pos)':'var(--neg)'}">${chg>=0?'+':''}${fi(chg,true)} since last</div>`:''}
+    <div class="wcat-upd">${isSynth?'Auto from accounts':isStale?'⚠️ '+fd(c.date):c.date?fd(c.date):'No data'}</div>
+    ${hist.length>=2?`<div class="mt8">${miniSpark(hist.map(h=>h.value),c.color)}</div>`:''}
+  </div>`;
+}
+function renderMWHist(){
+  const snaps=S.snaps.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const need2=snaps.length<2;
+  return`
+  <div class="sh"><div><div style="font-size:16px;font-weight:700">Net Worth History</div><div class="ssub">${snaps.length} snapshots — actual data only, never fabricated.</div></div><button class="btn bp bsm" onclick="openSnap()">+ Capture Snapshot</button></div>
+  <div class="card mb12">
+    <div class="chd"><div class="ctit">Net Worth Growth</div></div>
+    ${need2?dataNeedsNote(2,'snapshots')+`<div class="empty" style="height:160px"><button class="btn bp bsm" onclick="openSnap()">Capture First Snapshot</button></div>`:svgLine(snaps.map(s=>s.nw),700,220,'#8b5cf6',true,snaps.map(s=>fmy(s.date)))}
+  </div>
+  ${snaps.length>=2?`<div class="card mb12">
+    <div class="chd"><div class="ctit">Snapshot History</div></div>
+    <div class="tw"><table><thead><tr><th>Date</th><th class="tr">Assets</th><th class="tr">Liabilities</th><th class="tr">Net Worth</th><th class="tr">Change</th><th>Notes</th><th></th></tr></thead>
+    <tbody>${snaps.slice().reverse().map((s,i,arr)=>{const prev=arr[i+1];const chg=prev?s.nw-prev.nw:null;return`<tr><td class="tmono">${fd(s.date)}</td><td class="tr tmono">${fi(s.assets)}</td><td class="tr tmono">${fi(s.liabs)}</td><td class="tr tmono bold">${fi(s.nw)}</td><td class="tr">${chg!==null?`<span class="${chg>=0?'pos':'neg'}">${chg>=0?'+':''}${fi(chg,true)}</span>`:'—'}</td><td class="sec trunc" style="max-width:110px">${s.notes||'—'}</td><td><button class="btn bg bsm bico" onclick="delSnap('${s.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td></tr>`;}).join('')}</tbody>
+    </table></div>
+  </div>`:''}
+  <div class="card">
+    <div class="chd"><div class="ctit">Category History</div></div>
+    ${S.activeCats.length===0?emptyState('No categories active','Activate categories in My Wealth'):
+    (()=>{const cats=ALL_WCATS.filter(c=>S.activeCats.includes(c.id)).filter(c=>{const h=S.wealthLog.filter(e=>e.catId===c.id);return h.length>=2;});
+    if(!cats.length)return dataNeedsNote(2,'updates per category')+emptyState('No history yet','Update each category value at least twice over different dates to see change over time');
+    return`<div class="ga">${cats.map(c=>{const hist=S.wealthLog.filter(e=>e.catId===c.id).sort((a,b)=>a.date.localeCompare(b.date));const first=hist[0].value,last=hist[hist.length-1].value,chg=last-first,chgP=first>0?chg/first*100:0;return`<div class="card" style="padding:12px;background:var(--bg3)"><div class="flex jb fi2 mb4"><div style="font-size:11px;font-weight:600">${c.icon} ${c.label}</div><span class="${chg>=0?'pos':'neg'}" style="font-size:10.5px;font-weight:600">${chg>=0?'+':''}${fp(chgP)}</span></div>${miniSpark(hist.map(h=>h.value),c.color)}<div class="flex jb mt4"><span class="muted" style="font-size:10px">${fi(first,true)}</span><span style="font-size:10px;font-weight:600">${fi(last,true)}</span></div></div>`;}).join('')}</div>`;})()}
+  </div>`;
+}
+function renderMWLiab(){
+  const tot=S.liabs.reduce((s,l)=>s+(l.prin||0),0);
+  return`
+  <div class="flex jb fi2 mb12"><div>${kpi('Total Liabilities',fi(tot,true),fi(tot),'',[244,63,94],'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')}</div><button class="btn bp bsm" onclick="openModal('liability')">+ Add Liability</button></div>
+  <div class="tw"><table><thead><tr><th>Name</th><th>Type</th><th class="tr">Outstanding</th><th class="tr">Rate</th><th class="tr">EMI</th><th>Maturity</th><th></th></tr></thead>
+  <tbody>${S.liabs.length?S.liabs.map(l=>`<tr><td style="font-weight:500">${l.name}</td><td><span class="badge bg-y">${l.type}</span></td><td class="tr tmono tneg">${fi(l.prin)}</td><td class="tr tmono">${l.rate?fp(l.rate,2):'—'}</td><td class="tr tmono">${l.emi?fi(l.emi):'—'}</td><td class="sec">${fd(l.mat)}</td><td><button class="btn bg bsm bico" onclick="delLiab('${l.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td></tr>`).join(''):emptyRow(7,'No liabilities. Add home loans, personal loans, or credit card balances.')}
+  </tbody></table></div>`;
+}
+
+// ─── FUTURE PLANNING ─────────────────────
+function renderFP(){
+  document.getElementById('pg-fp').innerHTML=mkTabs('fp-tabs',[
+    {id:'fp-goals',label:'Financial Goals',content:renderFPGoals()},
+    {id:'fp-fore',label:'Wealth Forecast',content:renderFPFore()},
+    {id:'fp-fire',label:'FIRE & Retirement',content:renderFPFire()},
+    {id:'fp-em',label:'Emergency Fund',content:renderFPEM()},
+  ],'fp-goals');
+}
+function renderFPGoals(){
+  const gicons={retirement:'🎯',emergency:'🛡️',education:'📚',house:'🏠',vehicle:'🚗',vacation:'✈️',other:'⭐'};
+  return`
+  <div class="flex jb fi2 mb12"><div class="sec">${S.goals.length} goals</div><button class="btn bp bsm" onclick="openModal('goal')">+ New Goal</button></div>
+  <div class="ga">${S.goals.length?S.goals.map(g=>{
+    const gc=goalCalc(g);const yrsLeft=g.tDate?Math.max(0,(new Date(g.tDate)-new Date())/(365.25*864e5)):null;
+    const priC={high:'var(--neg)',medium:'var(--warn)',low:'var(--pos)'};
+    return`<div class="gc"><div class="flex jb fi2 mb8"><div class="flex fi2 g8"><div style="font-size:20px">${gicons[g.type]||'⭐'}</div><div><div style="font-weight:600;font-size:13px">${g.name}</div><div class="muted" style="font-size:10.5px">${g.type}${g.pri?' · <span style="color:'+priC[g.pri]+'">'+g.pri+'</span>':''}</div></div></div>
+    <div class="flex g4p"><button class="btn bg bsm bico" onclick="editGoal('${g.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="12"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn bg bsm bico" onclick="delGoal('${g.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>
+    <div class="fsr"><span class="fsl">Target (today's ₹)</span><span class="fsv">${fi(gc.target)}</span></div>
+    <div class="fsr"><span class="fsl">Inflation-adjusted</span><span class="fsv">${fi(gc.inflTgt)}</span></div>
+    <div class="fsr"><span class="fsl">Earmarked today</span><span class="fsv">${fi(gc.earmark)}</span></div>
+    <div class="fsr"><span class="fsl">Projected corpus</span><span class="fsv ${gc.proj>=gc.inflTgt?'pos':'warn'}">${fi(gc.proj,true)}</span></div>
+    <div class="fsr"><span class="fsl">${gc.shortfall>0?'Shortfall':'Surplus'}</span><span class="fsv ${gc.shortfall>0?'neg':'pos'}">${gc.shortfall>0?'-':'+'}${fi(gc.shortfall>0?gc.shortfall:gc.proj-gc.inflTgt,true)}</span></div>
+    ${yrsLeft!==null?`<div class="fsr"><span class="fsl">Time left</span><span class="fsv">${yrsLeft.toFixed(1)} yrs</span></div>`:''}
+    ${gc.req>0?`<div class="fsr"><span class="fsl">Required SIP</span><span class="fsv warn">${fi(gc.req,true)}/mo</span></div>`:''}
+    <div class="mt8"><div class="flex jb mb4" style="font-size:10px"><span class="sec">Funded</span><span style="font-weight:600">${gc.pct.toFixed(0)}%</span></div><div class="prog"><div class="pf" style="width:${Math.min(100,gc.pct).toFixed(0)}%"></div></div></div>
+    </div>`;}).join(''):emptyState('No goals yet','Create retirement, education, vacation or any custom financial goal.')}
+  </div>`;
+}
+function renderFPFore(){
+  const fs=S.fs;
+  const startPort=investablePortfolio();
+  const mC=monthlyInvestmentEst()||20000;
+  const base=forecast({start:startPort,mContrib:mC,stepUp:fs.stepUp,ret:fs.base.ret,inf:fs.base.inf,yrs:fs.dur});
+  const cons=forecast({start:startPort,mContrib:mC,stepUp:fs.stepUp,ret:fs.conservative.ret,inf:fs.conservative.inf,yrs:fs.dur});
+  const opt=forecast({start:startPort,mContrib:mC,stepUp:fs.stepUp,ret:fs.optimistic.ret,inf:fs.optimistic.inf,yrs:fs.dur});
+  const labels=base.map(r=>'Y'+r.yr);const final=base[base.length-1];
+  const target=fs.target||0;const tYear=target>0?base.findIndex(r=>r.nom>=target)+1:null;
+  return`
+  <div class="dsrc"><div class="dsrcd" style="background:var(--pos)"></div>Starting from investable portfolio of <strong>${fi(startPort,true)}</strong> (excludes bank accounts) · Monthly SIP: <strong>${fi(mC,true)}</strong></div>
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chd"><div class="ctit">Assumptions</div></div>
+      <div class="fr3">
+        <div class="fg"><label class="fl">Duration (yrs)</label><input type="number" class="fi" id="fc-dur" value="${fs.dur}" min="1" max="40" oninput="updateForecast()"></div>
+        <div class="fg"><label class="fl">Base return (%)</label><input type="number" class="fi" id="fc-ret" value="${fs.base.ret}" step="0.5" oninput="updateForecast()"></div>
+        <div class="fg"><label class="fl">Inflation (%)</label><input type="number" class="fi" id="fc-inf" value="${fs.base.inf}" step="0.5" oninput="updateForecast()"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">SIP step-up (%/yr)</label><input type="number" class="fi" id="fc-su" value="${fs.stepUp}" oninput="updateForecast()"></div>
+        <div class="fg"><label class="fl">Target wealth (₹)</label><input type="number" class="fi" id="fc-tgt" value="${fs.target||''}" placeholder="e.g. 50000000" oninput="updateForecast()"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">Scenarios in ${fs.dur} Years</div></div>
+      <div class="g3">
+        <div class="sc sc-c"><div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--neg);margin-bottom:8px">Conservative</div><div style="font-size:18px;font-weight:700">${fi(cons[cons.length-1]?.nom,true)}</div><div class="muted" style="font-size:10px">Real: ${fi(cons[cons.length-1]?.real,true)}</div></div>
+        <div class="sc sc-b"><div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--p);margin-bottom:8px">Base Case</div><div style="font-size:18px;font-weight:700">${fi(final?.nom,true)}</div><div class="muted" style="font-size:10px">Real: ${fi(final?.real,true)}</div></div>
+        <div class="sc sc-o"><div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--pos);margin-bottom:8px">Optimistic</div><div style="font-size:18px;font-weight:700">${fi(opt[opt.length-1]?.nom,true)}</div><div class="muted" style="font-size:10px">Real: ${fi(opt[opt.length-1]?.real,true)}</div></div>
+      </div>
+      ${target>0?`<div class="mt12" style="background:var(--bg3);border-radius:var(--r);padding:10px;font-size:11px;color:var(--t1)">Target ${fi(target,true)} estimated ${tYear?'in Year '+tYear:'beyond the '+fs.dur+'-year horizon'}.</div>`:''}
+    </div>
+  </div>
+  <div class="card mb12">
+    <div class="chd"><div class="ctit">Wealth Projection — 3 Scenarios</div><div class="muted" style="font-size:10px">Investable portfolio only · Monthly compounding · Contribution at start of period</div></div>
+    ${svgMultiLine([{name:'Conservative',color:'var(--neg)',vals:cons.map(r=>r.nom)},{name:'Base',color:'var(--p)',vals:base.map(r=>r.nom)},{name:'Optimistic',color:'var(--pos)',vals:opt.map(r=>r.nom)}],labels,700,240)}
+    <div class="flex g16 mt8"><div class="flex fi2 g4p" style="font-size:10px"><div style="width:16px;height:2px;background:var(--neg)"></div>Conservative</div><div class="flex fi2 g4p" style="font-size:10px"><div style="width:16px;height:2px;background:var(--p)"></div>Base</div><div class="flex fi2 g4p" style="font-size:10px"><div style="width:16px;height:2px;background:var(--pos)"></div>Optimistic</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="chd"><div class="ctit">Nominal vs Real Wealth (Base)</div><div class="muted" style="font-size:10px">${fs.base.inf}% inflation</div></div>
+      ${svgMultiLine([{name:'Nominal',color:'var(--p)',vals:base.map(r=>r.nom)},{name:"Real (Today's ₹)",color:'var(--c3)',vals:base.map(r=>r.real)}],labels,500,200)}
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">What-If Simulator</div></div>
+      <div class="muted mb12" style="font-size:11px">Change any input to instantly see the effect.</div>
+      <div class="fsr"><span class="fsl">Starting portfolio (₹)</span><input class="fi" type="number" id="wi-s" value="${startPort}" style="width:120px;text-align:right" oninput="runWI()"></div>
+      <div class="fsr"><span class="fsl">Monthly SIP (₹)</span><input class="fi" type="number" id="wi-sip" value="${mC}" style="width:120px;text-align:right" oninput="runWI()"></div>
+      <div class="fsr"><span class="fsl">Annual return (%)</span><input class="fi" type="number" id="wi-r" value="${fs.base.ret}" step="0.5" style="width:120px;text-align:right" oninput="runWI()"></div>
+      <div id="wi-res" class="mt12"></div>
+    </div>
+  </div>`;
+}
+function updateForecast(){
+  S.fs.dur=parseInt(document.getElementById('fc-dur')?.value)||20;
+  S.fs.base.ret=parseFloat(document.getElementById('fc-ret')?.value)||11;
+  S.fs.base.inf=parseFloat(document.getElementById('fc-inf')?.value)||6;
+  S.fs.stepUp=parseFloat(document.getElementById('fc-su')?.value)||10;
+  S.fs.target=parseFloat(document.getElementById('fc-tgt')?.value)||0;
+  save();document.getElementById('pg-fp').innerHTML='';renderFP();setTimeout(()=>setTab('fp-tabs','fp-fore'),50);
+}
+function runWI(){
+  const start=parseFloat(document.getElementById('wi-s')?.value)||0;
+  const sip=parseFloat(document.getElementById('wi-sip')?.value)||0;
+  const ret=parseFloat(document.getElementById('wi-r')?.value)||0;
+  const res=forecast({start,mContrib:sip,stepUp:0,ret,inf:S.fs.base.inf,yrs:S.fs.dur});
+  const f=res[res.length-1];const el=document.getElementById('wi-res');
+  if(el&&f)el.innerHTML=`<div style="background:var(--bg3);border-radius:var(--r);padding:10px 14px"><div class="g2"><div><div class="kl">Nominal (${S.fs.dur}Y)</div><div style="font-size:17px;font-weight:700">${fi(f.nom,true)}</div></div><div><div class="kl">In Today's ₹</div><div style="font-size:17px;font-weight:700">${fi(f.real,true)}</div></div><div><div class="kl">Total Invested</div><div style="font-size:17px;font-weight:700">${fi(sip*12*S.fs.dur,true)}</div></div><div><div class="kl">Growth</div><div style="font-size:17px;font-weight:700;color:var(--pos)">${fi(Math.max(0,f.nom-start-sip*12*S.fs.dur),true)}</div></div></div></div>`;
+}
+function renderFPFire(){
+  const fc=fireCalc();
+  return`
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chd"><div class="ctit">FIRE Inputs</div></div>
+      <div class="fr"><div class="fg"><label class="fl">Current age</label><input type="number" class="fi" id="f-age" value="${S.cfg.age||32}" oninput="updateFire()"></div><div class="fg"><label class="fl">Retirement age</label><input type="number" class="fi" id="f-ra" value="${S.cfg.retireAge||55}" oninput="updateFire()"></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Life expectancy</label><input type="number" class="fi" id="f-le" value="${S.fs.lifeExp||85}" oninput="updateFire()"></div><div class="fg"><label class="fl">Withdrawal rate (%)</label><input type="number" class="fi" id="f-wr" value="${S.fs.wRate||4}" step="0.25" oninput="updateFire()"></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Pre-retirement return (%)</label><input type="number" class="fi" id="f-prer" value="${S.fs.base.ret}" step="0.5" oninput="updateFire()"></div><div class="fg"><label class="fl">Post-retirement return (%)</label><input type="number" class="fi" id="f-postr" value="${S.fs.postRet||8}" step="0.5" oninput="updateFire()"></div></div>
+      <div class="div"></div>
+      <div class="dsrc" style="margin-bottom:0"><div class="dsrcd" style="background:var(--pos)"></div>Using investable portfolio <strong>${fi(investablePortfolio(),true)}</strong> (excl. bank accounts) · SIP: <strong>${fi(fc.mContrib,true)}/mo</strong></div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">FIRE Results</div></div>
+      <div class="fsr"><span class="fsl">Years to retirement</span><span class="fsv">${fc.ytr}</span></div>
+      <div class="fsr"><span class="fsl">Current monthly expenses</span><span class="fsv">${fi(fc.mExp,true)}</span></div>
+      <div class="fsr"><span class="fsl">Expenses at retirement (inflated)</span><span class="fsv">${fi(fc.expAtRet/12,true)}/mo</span></div>
+      <div class="fsr"><span class="fsl">Required corpus</span><span class="fsv bold">${fi(fc.corpus,true)}</span></div>
+      <div class="fsr"><span class="fsl">Projected corpus</span><span class="fsv ${fc.projCorpus>=fc.corpus?'pos':'neg'}">${fi(fc.projCorpus,true)}</span></div>
+      <div class="fsr"><span class="fsl">${fc.projCorpus>=fc.corpus?'Surplus':'Gap'}</span><span class="fsv ${fc.projCorpus>=fc.corpus?'pos':'neg'}">${fi(Math.abs(fc.projCorpus-fc.corpus),true)}</span></div>
+      <div class="fsr"><span class="fsl">Estimated FI age</span><span class="fsv bold">${fc.fiAge||'Beyond horizon'}</span></div>
+      <div class="fsr"><span class="fsl">Additional monthly SIP needed</span><span class="fsv ${fc.reqMC>0?'warn':''}">${fi(fc.reqMC,true)}/mo</span></div>
+      <div class="mt8"><div class="flex jb mb4" style="font-size:10px"><span class="sec">Funded</span><span style="font-weight:600">${Math.min(100,fc.projCorpus/fc.corpus*100).toFixed(0)}%</span></div><div class="prog"><div class="pf ${fc.projCorpus>=fc.corpus?'pfg':''}" style="width:${Math.min(100,fc.projCorpus/fc.corpus*100).toFixed(0)}%"></div></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ctit">Projected vs Required Corpus</div></div>
+    ${(()=>{const preR=S.fs.base.ret/100,preI=S.fs.base.inf/100,startPort=investablePortfolio(),mC=monthlyInvestmentEst()||20000,yrs=fc.ytr;
+    const pts=Array.from({length:yrs+1},(_,i)=>{const fvL=startPort*Math.pow(1+preR,i);const fvC=preR>0?mC*12*((Math.pow(1+preR,i)-1)/preR):mC*12*i;return{yr:i,proj:fvL+fvC,req:fc.corpus};});
+    return svgMultiLine([{name:'Projected',color:'var(--p)',vals:pts.map(p=>p.proj)},{name:'Required',color:'var(--neg)',vals:pts.map(p=>p.req)}],pts.map(p=>'Y'+p.yr),700,220);})()}
+    <div class="flex g16 mt8"><div class="flex fi2 g4p" style="font-size:10px"><div style="width:16px;height:2px;background:var(--p)"></div>Projected</div><div class="flex fi2 g4p" style="font-size:10px"><div style="width:16px;height:2px;background:var(--neg)"></div>Required corpus</div></div>
+  </div>`;
+}
+function updateFire(){
+  S.cfg.age=parseInt(document.getElementById('f-age')?.value)||32;
+  S.cfg.retireAge=parseInt(document.getElementById('f-ra')?.value)||55;
+  S.fs.lifeExp=parseInt(document.getElementById('f-le')?.value)||85;
+  S.fs.wRate=parseFloat(document.getElementById('f-wr')?.value)||4;
+  S.fs.base.ret=parseFloat(document.getElementById('f-prer')?.value)||11;
+  S.fs.postRet=parseFloat(document.getElementById('f-postr')?.value)||8;
+  save();document.getElementById('pg-fp').innerHTML='';renderFP();setTimeout(()=>setTab('fp-tabs','fp-fire'),50);
+}
+function renderFPEM(){
+  const em=emFund();const tgt=[3,6,9,12];const req=em.shortfall>0&&em.monthly>0?em.shortfall/12:0;
+  const sav=getAcct('savings');
+  return`
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chd"><div class="ctit">Emergency Fund Status</div></div>
+      <div class="flex g8 mb16">${tgt.map(t=>`<button class="btn ${S.cfg.emMonths===t?'bp':'bs'} bsm" onclick="setEM(${t})">${t} months</button>`).join('')}</div>
+      <div class="fsr"><span class="fsl">Est. monthly expenses</span><span class="fsv">${fi(em.monthly,true)}</span></div>
+      <div class="fsr"><span class="fsl">Target coverage</span><span class="fsv">${S.cfg.emMonths} months</span></div>
+      <div class="fsr"><span class="fsl">Target reserve</span><span class="fsv">${fi(em.target,true)}</span></div>
+      <div class="fsr"><span class="fsl">Allocated (savings account)</span><span class="fsv">${fi(em.alloc,true)}</span></div>
+      <div class="fsr"><span class="fsl">Coverage</span><span class="fsv ${em.months>=S.cfg.emMonths?'pos':'neg'}">${em.months.toFixed(1)} months</span></div>
+      <div class="fsr"><span class="fsl">${em.shortfall>0?'Shortfall':'Surplus'}</span><span class="fsv ${em.shortfall>0?'neg':'pos'}">${fi(em.shortfall>0?em.shortfall:em.alloc-em.target,true)}</span></div>
+      ${req>0?`<div class="fsr"><span class="fsl">Monthly top-up needed</span><span class="fsv warn">${fi(req,true)}/mo</span></div>`:''}
+      <div class="mt8"><div class="flex jb mb4" style="font-size:10px"><span class="sec">Funded</span><span style="font-weight:600">${Math.min(100,em.months/S.cfg.emMonths*100).toFixed(0)}%</span></div><div class="prog"><div class="pf ${em.months>=S.cfg.emMonths?'pfg':''}" style="width:${Math.min(100,em.months/S.cfg.emMonths*100).toFixed(0)}%"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctit">Emergency Fund Source</div></div>
+      ${sav?`<div class="muted mb12" style="font-size:11px">Emergency fund comes from the savings account split configured in Cash Flow → My Accounts.</div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:12px">
+        <div class="flex jb fi2 mb8"><div style="font-weight:600">🏦 ${sav.name}</div><div style="font-weight:700">${fi(sav.balance,true)}</div></div>
+        ${bbrRow('🛡️ Emergency Fund',sav.emPortion||0,sav.balance,'var(--warn)')}
+        ${bbrRow('💧 Liquid Buffer',sav.liquidPortion||0,sav.balance,'var(--c2)')}
+      </div>
+      <button class="btn bs bsm" onclick="openUpdateAccount('${sav.id}')">Update Splits</button>
+      <button class="btn bg bsm" onclick="render('cf');setTimeout(()=>setTab('cf-tabs','cf-acct'),80)">Go to My Accounts</button>`:
+      `<div class="muted mb12" style="font-size:11px">Configure your savings account split in Cash Flow → My Accounts to set the emergency fund amount.</div>${emptyState('No savings account set','Set up your accounts to link emergency fund here',`<button class="btn bp bsm mt12" onclick="render('cf');setTimeout(()=>setTab('cf-tabs','cf-acct'),80)">Set Up Accounts</button>`)}`}
+    </div>
+  </div>`;
+}
+function setEM(m){S.cfg.emMonths=m;save();document.getElementById('pg-fp').innerHTML='';renderFP();setTimeout(()=>setTab('fp-tabs','fp-em'),50);}
+
+// ─── MY RECORDS ──────────────────────────
+function renderMR(){
+  document.getElementById('pg-mr').innerHTML=mkTabs('mr-tabs',[
+    {id:'travel',label:'Travel Vault',content:renderTravel()},
+    {id:'reports',label:'Reports',content:renderReports()},
+    {id:'journal',label:'Journal',content:renderJournal()},
+    {id:'settings',label:'Settings & Backup',content:renderSettings()},
+  ],'travel');
+}
+function renderTravel(){
+  const trips=S.trips.slice().sort((a,b)=>b.sDate.localeCompare(a.sDate));
+  const tot=trips.reduce((s,t)=>s+t.exps.reduce((x,e)=>x+e.amt,0),0);
+  return`
+  <div class="flex jb fi2 mb12"><div class="flex g16"><div><div class="kl">Total trips</div><div style="font-size:17px;font-weight:700">${trips.length}</div></div><div><div class="kl">Total spent</div><div style="font-size:17px;font-weight:700">${fi(tot,true)}</div></div></div><button class="btn bp bsm" onclick="openModal('trip')">+ Add Trip</button></div>
+  <div class="ga">${trips.length?trips.map(t=>{const sp=t.exps.reduce((s,e)=>s+e.amt,0);const d=t.sDate&&t.eDate?Math.max(1,Math.ceil((new Date(t.eDate)-new Date(t.sDate))/(864e5))):1;return`<div class="tc" onclick="viewTrip('${t.id}')"><div style="font-size:26px;margin-bottom:8px">${t.dom?'🇮🇳':'🌍'}</div><div style="font-weight:600;font-size:13px;margin-bottom:2px">${t.name}</div><div class="sec mb8" style="font-size:11px">${t.dest} · ${fd(t.sDate)}</div><div class="flex jb fi2"><div><div class="kl">Spent</div><div style="font-weight:700;font-size:15px">${fi(sp,true)}</div></div><div style="text-align:right"><div class="kl">Budget</div><div style="font-size:13px">${fi(t.budget,true)}</div></div></div><div class="prog mt8"><div class="pf ${sp>t.budget?'pfr':'pfg'}" style="width:${t.budget?Math.min(100,sp/t.budget*100).toFixed(0):0}%"></div></div><div class="flex jb mt8" style="font-size:10px;color:var(--t2)"><span>${t.pax||1} traveler${(t.pax||1)>1?'s':''} · ${d}d</span>${t.inCF?'<span class="badge bg-p">In Cash Flow</span>':'<span class="badge bg-gray">Standalone</span>'}</div></div>`;}).join(''):emptyState('No trips yet','Record your travel history independently of your financial forecasts.')}`;
+}
+function viewTrip(id){const t=S.trips.find(x=>x.id===id);if(!t)return;const sp=t.exps.reduce((s,e)=>s+e.amt,0);const d=t.sDate&&t.eDate?Math.max(1,Math.ceil((new Date(t.eDate)-new Date(t.sDate))/(864e5))):1;const byCat={};t.exps.forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+e.amt;});const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);const cols=['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)'];
+showInfo(t.name,`<div class="g3 mb12"><div><div class="kl">Total spent</div><div style="font-weight:700;font-size:18px">${fi(sp,true)}</div></div><div><div class="kl">Per person</div><div style="font-size:14px;font-weight:600">${fi(sp/(t.pax||1),true)}</div></div><div><div class="kl">Per day</div><div style="font-size:14px;font-weight:600">${fi(sp/d,true)}</div></div></div>
+${sp?svgDonut(cats.map((c,i)=>({label:c[0],val:c[1],color:cols[i%cols.length]})),300,125,85,60):''}
+<div class="tw mt12"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="tr">Amount</th><th></th></tr></thead><tbody>
+${t.exps.map(e=>`<tr><td class="tmono">${fd(e.date)}</td><td>${e.cat}</td><td>${e.desc||'—'}</td><td class="tr tmono">${fi(e.amt)}</td><td><button class="btn bg bsm bico" onclick="delTripExp('${t.id}','${e.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td></tr>`).join('')}
+</tbody></table></div>
+<div class="flex g8 mt12"><button class="btn bs bsm" onclick="openTripExp('${t.id}')">+ Add Expense</button><label class="tgl"><input type="checkbox" ${t.inCF?'checked':''} onchange="toggleTripCF('${t.id}',this.checked)"><div class="tgl-t"><div class="tgl-th"></div></div><span style="font-size:12px;color:var(--t1)">Include in Cash Flow</span></label><button class="btn bdanger bsm" onclick="delTrip('${t.id}')">Delete Trip</button></div>`,true);}
+function renderReports(){const N=netWorthCalc(),em=emFund();const now=new Date();const inc=monthlyIncomeEst(),inv=monthlyInvestmentEst(),exp3=monthlyExpenseActual(3);
+return`<div class="flex jb fi2 mb16"><div style="font-size:16px;font-weight:700">Financial Summary</div><div class="flex g8"><button class="btn bp bsm" onclick="window.print()">Save as PDF</button><button class="btn bs bsm" onclick="exportCFCSV()">Export CSV</button><button class="btn bs bsm" onclick="exportJSON()">Full Backup</button></div></div>
+<div class="card" id="report-body"><div style="max-width:640px;margin:0 auto">
+<div class="flex jb fi2 mb16"><div><div style="font-size:18px;font-weight:700">Personal Financial Summary</div><div class="muted" style="font-size:11px">Generated ${fd(now)}${S.cfg.name?' · '+S.cfg.name:''}</div></div><div style="font-size:26px;font-weight:700">${fi(N.nw,true)}</div></div>
+<div class="g3 mb12"><div><div class="kl">Total Assets</div><div style="font-weight:700;font-size:15px">${fi(N.assets,true)}</div></div><div><div class="kl">Liabilities</div><div style="font-weight:700;font-size:15px;color:var(--neg)">${fi(N.liabs,true)}</div></div><div><div class="kl">Net Worth</div><div style="font-weight:700;font-size:15px;color:var(--pos)">${fi(N.nw,true)}</div></div></div>
+<div class="div"></div>
+<div class="g2 mb12">
+<div><div class="kl mb8">Monthly Cash Flow (3-mo avg)</div><div class="fsr"><span class="fsl">Income</span><span class="fsv pos">${fi(inc)}</span></div><div class="fsr"><span class="fsl">Expenses</span><span class="fsv neg">${fi(exp3||Math.max(0,inc-inv))}</span></div><div class="fsr"><span class="fsl">Invested</span><span class="fsv">${fi(inv)}</span></div></div>
+<div><div class="kl mb8">Emergency Fund</div><div class="fsr"><span class="fsl">Allocated</span><span class="fsv">${fi(em.alloc)}</span></div><div class="fsr"><span class="fsl">Coverage</span><span class="fsv ${em.months>=S.cfg.emMonths?'pos':'neg'}">${em.months.toFixed(1)} months</span></div></div>
+</div>
+${S.accounts.length?`<div class="div"></div><div class="kl mb8">Bank Accounts</div><div class="tw mb12"><table><thead><tr><th>Account</th><th>Type</th><th class="tr">Balance</th><th class="tr">Emergency Fund</th><th class="tr">Liquid Buffer</th></tr></thead><tbody>${S.accounts.map(a=>`<tr><td>${a.name}</td><td>${a.type}</td><td class="tr tmono">${fi(a.balance)}</td><td class="tr tmono">${fi(a.emPortion||0)}</td><td class="tr tmono">${fi(a.liquidPortion||0)}</td></tr>`).join('')}</tbody></table></div>`:''}
+<div class="div"></div><div class="kl mb8">Portfolio</div>
+<div class="tw mb12"><table><thead><tr><th>Category</th><th class="tr">Value</th><th class="tr">Share</th></tr></thead><tbody>
+${allVisibleCats().map(c=>`<tr><td>${c.icon} ${c.label}</td><td class="tr tmono">${fi(c.value)}</td><td class="tr">${N.assets?(c.value/N.assets*100).toFixed(1):0}%</td></tr>`).join('')}
+</tbody></table></div>
+${S.goals.length?`<div class="div"></div><div class="kl mb8">Goals</div><div class="tw mb12"><table><thead><tr><th>Goal</th><th class="tr">Target</th><th class="tr">Funded</th><th class="tr">Progress</th></tr></thead><tbody>${S.goals.map(g=>{const gc=goalCalc(g);return`<tr><td>${g.name}</td><td class="tr tmono">${fi(gc.target)}</td><td class="tr tmono">${fi(gc.earmark)}</td><td class="tr ${gc.pct>=100?'pos':'warn'}">${gc.pct.toFixed(0)}%</td></tr>`;}).join('')}</tbody></table></div>`:''}
+<div class="div"></div><div class="muted" style="font-size:10px;text-align:center">Personal summary for private use. Figures are manually entered.</div>
+</div></div>`;}
+function renderJournal(){
+return`<div class="flex jb fi2 mb12"><div class="sec">${S.journal.length} entries</div><button class="btn bp bsm" onclick="openJournal()">+ New Entry</button></div>
+${S.journal.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(j=>`<div class="ji" onclick="viewJournal('${j.id}')"><div class="muted mb4" style="font-size:10px">${fd(j.date)} · <span class="badge bg-gray">${j.cat||'Note'}</span></div><div style="font-weight:600;font-size:13px;margin-bottom:4px">${j.title}</div><div class="sec" style="font-size:11.5px;white-space:pre-line">${(j.notes||'').substring(0,120)}${j.notes?.length>120?'…':''}</div></div>`).join('')}
+${!S.journal.length?emptyState('No journal entries','Record investment decisions, goal changes, and financial observations.'):''}`;
+}
+function renderSettings(){
+return`<div class="g2 mb16">
+<div class="card">
+  <div class="chd"><div class="ctit">General Settings</div></div>
+  <div class="fr"><div class="fg"><label class="fl">Name</label><input type="text" class="fi" value="${S.cfg.name||''}" oninput="S.cfg.name=this.value;save()"></div><div class="fg"><label class="fl">Age</label><input type="number" class="fi" value="${S.cfg.age||''}" oninput="S.cfg.age=+this.value;save()"></div></div>
+  <div class="fr"><div class="fg"><label class="fl">Financial Year</label><select class="fsel" onchange="S.cfg.fy=this.value;save()"><option value="indian" ${S.cfg.fy==='indian'?'selected':''}>Indian (Apr–Mar)</option><option value="calendar">Calendar</option></select></div><div class="fg"><label class="fl">Inflation (%)</label><input type="number" class="fi" value="${S.cfg.inflation}" step="0.5" oninput="S.cfg.inflation=+this.value;save()"></div></div>
+  <div class="fr"><div class="fg"><label class="fl">Emergency Fund Target (months)</label><input type="number" class="fi" value="${S.cfg.emMonths}" oninput="S.cfg.emMonths=+this.value;save()"></div><div class="fg"><label class="fl">Retirement Age</label><input type="number" class="fi" value="${S.cfg.retireAge||55}" oninput="S.cfg.retireAge=+this.value;S.fs.retireAge=+this.value;save()"></div></div>
+</div>
+<div class="card">
+  <div class="chd"><div class="ctit">Wealth Category Visibility</div><button class="btn bp bsm" onclick="openManageCats()">Manage</button></div>
+  <div class="muted mb12" style="font-size:11px">Choose which investment categories appear in My Wealth. Remove categories you do not use. Account-derived cards (salary account, emergency fund, liquid buffer) are always included if accounts are configured.</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px">${ALL_WCATS.map(c=>`<div onclick="toggleCat('${c.id}')" style="padding:5px 10px;border-radius:var(--r);cursor:pointer;font-size:11px;border:1px solid ${S.activeCats.includes(c.id)?'var(--p)':'var(--bd)'};background:${S.activeCats.includes(c.id)?'var(--pi)':'var(--bg3)'};color:${S.activeCats.includes(c.id)?'var(--p)':'var(--t2)'}">${c.icon} ${c.label}</div>`).join('')}</div>
+</div>
+</div>
+<div class="card">
+  <div class="chd"><div class="ctit">Data Backup & Restore</div></div>
+  <div class="muted mb12" style="font-size:11px">⚠️ Browser storage is not encrypted. Export regular JSON backups. All data is local to this browser and device only.</div>
+  <div class="flex g8" style="flex-wrap:wrap">
+    <button class="btn bp" onclick="exportJSON()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Backup</button>
+    <button class="btn bs" onclick="importJSON()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import Backup</button>
+    <button class="btn bs" onclick="restoreDemo()"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>Restore Demo</button>
+    <button class="btn bdanger" onclick="resetApp()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Reset All Data</button>
+  </div>
+  <input type="file" id="impf" accept=".json" style="display:none" onchange="handleImport(this)">
+</div>`;}
+// ─── MODALS ──────────────────────────────
+let _saveFn=null;
+function showModal(ttl,body,fn){_saveFn=fn;document.getElementById('modals').innerHTML=`<div class="mover open" onclick="if(event.target.classList.contains('mover'))closeM()"><div class="modal"><div class="mhd"><div class="mttl">${ttl}</div><button class="btn bg bico" onclick="closeM()"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="mbd">${body}</div><div class="mft"><button class="btn bg" onclick="closeM()">Cancel</button><button class="btn bp" onclick="doSave()">Save</button></div></div></div>`;}
+function showInfo(ttl,body,wide){document.getElementById('modals').innerHTML=`<div class="mover open" onclick="if(event.target.classList.contains('mover'))closeM()"><div class="modal ${wide?'mlg':''}"><div class="mhd"><div class="mttl">${ttl}</div><button class="btn bg bico" onclick="closeM()"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="mbd">${body}</div></div></div>`;}
+function doSave(){if(_saveFn){const ok=_saveFn();if(ok!==false){closeM();if(curPage)render(curPage);}}}
+function closeM(){document.getElementById('modals').innerHTML='';_saveFn=null;}
+function gv(id){return document.getElementById(id)?.value?.trim();}
+function gn(id){return parseFloat(document.getElementById(id)?.value)||0;}
+function gb(id){return document.getElementById(id)?.checked||false;}
+
+// CF Entry
+function openCFEntry(defType){
+  const dt=defType||'income';
+  showModal('Log Cash Flow Entry',`
+  <div class="fr"><div class="fg"><label class="fl">Date</label><input type="date" class="fi" id="cf-d" value="${today()}"></div><div class="fg"><label class="fl">Amount (₹)</label><input type="number" class="fi" id="cf-a" placeholder="0"></div></div>
+  <div class="fg"><label class="fl">Type</label><select class="fsel" id="cf-type" onchange="refreshCFCats()"><option value="income" ${dt==='income'?'selected':''}>💚 Income</option><option value="expense" ${dt==='expense'?'selected':''}>🔴 Expense</option><option value="investment" ${dt==='investment'?'selected':''}>🟣 Investment</option></select></div>
+  <div class="fg"><label class="fl">Category</label><select class="fsel" id="cf-cat">${CFCATS.filter(c=>c.type===dt).map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')}</select></div>
+  <div class="fg"><label class="fl">Note (optional)</label><input type="text" class="fi" id="cf-n" placeholder="e.g. Monthly salary, Grocery run"></div>
+  <label class="fck mt4"><input type="checkbox" id="cf-rec"> Recurring monthly</label>`,
+  ()=>{const amt=gn('cf-a');if(!amt){toast('Amount required','err');return false;}
+    S.cfLog.push({id:uid(),date:gv('cf-d')||today(),catId:gv('cf-cat')||'salary',type:gv('cf-type')||'income',amt,note:gv('cf-n')||'',recur:gb('cf-rec')});
+    save();toast('Entry logged','ok');return true;});
+  window.refreshCFCats=()=>{const type=document.getElementById('cf-type')?.value;const sel=document.getElementById('cf-cat');if(!sel)return;sel.innerHTML=CFCATS.filter(c=>c.type===type).map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');};
+}
+
+// Cat update (manual wealth category)
+function openCatUpdate(catId){
+  const cat=ALL_WCATS.find(c=>c.id===catId);if(!cat)return;
+  const lv=latestCatVal(catId);
+  const hist=S.wealthLog.filter(e=>e.catId===catId).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  showModal('Update — '+cat.label,`
+  <div class="flex fi2 g10 mb12"><span style="font-size:28px">${cat.icon}</span><div><div style="font-weight:600">${cat.label}</div><div class="muted" style="font-size:11px">Last: ${lv.value?fi(lv.value):'Not set'} on ${fd(lv.date)||'—'}</div></div></div>
+  <div class="fr"><div class="fg"><label class="fl">Current Value (₹)</label><input type="number" class="fi" id="cv-v" value="${lv.value||''}" placeholder="0"></div><div class="fg"><label class="fl">Date of this value</label><input type="date" class="fi" id="cv-d" value="${today()}"></div></div>
+  <div class="fg"><label class="fl">Note</label><input type="text" class="fi" id="cv-n" placeholder="Optional"></div>
+  ${hist.length?`<div class="div"></div><div class="kl mb8">Recent history</div><div class="tw"><table><thead><tr><th>Date</th><th class="tr">Value</th><th></th></tr></thead><tbody>${hist.map(h=>`<tr><td class="tmono">${fd(h.date)}</td><td class="tr tmono">${fi(h.value)}</td><td><button class="btn bg bsm bico" onclick="delWE('${h.id}')"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" width="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td></tr>`).join('')}</tbody></table></div>`:''}`,
+  ()=>{const val=gn('cv-v');if(isNaN(val)||val<0){toast('Enter a valid value','err');return false;}
+    S.wealthLog.push({id:uid(),catId,date:gv('cv-d')||today(),value:val,note:gv('cv-n')||''});
+    save();toast(cat.label+' updated to '+fi(val,true),'ok');return true;});
+}
+
+// Update all wealth categories at once
+function openUpdateWealth(){
+  showModal('Update All Wealth Categories',`
+  <div class="muted mb12" style="font-size:11px">Leave blank to keep previous value unchanged. Bank account balances are updated separately in My Accounts.</div>
+  ${ALL_WCATS.filter(id=>S.activeCats.includes(id.id)).map(c=>{const lv=latestCatVal(c.id);return`<div class="flex fi2 g10 mb8"><span style="font-size:18px;flex-shrink:0">${c.icon}</span><div style="flex:1;min-width:0"><div style="font-size:11.5px;font-weight:500">${c.label}</div><div class="muted" style="font-size:10px">Last: ${lv.value?fi(lv.value,true):'Not set'}</div></div><input type="number" class="fi" id="wu-${c.id}" placeholder="${lv.value||'Enter value'}" style="width:120px;margin:0"></div>`;}).join('')}
+  <div class="fg mt12"><label class="fl">Date of these values</label><input type="date" class="fi" id="wu-date" value="${today()}"></div>`,
+  ()=>{const date=gv('wu-date')||today();let n=0;
+    ALL_WCATS.filter(c=>S.activeCats.includes(c.id)).forEach(c=>{const el=document.getElementById('wu-'+c.id);if(!el||el.value==='')return;const val=parseFloat(el.value);if(!isNaN(val)&&val>=0){S.wealthLog.push({id:uid(),catId:c.id,date,value:val,note:''});n++;}});
+    if(!n){toast('No values entered','err');return false;}save();toast(n+' categories updated','ok');return true;});
+}
+
+// Account setup
+function openAccountSetup(){
+  const ea=getAcct('daily')||{name:'',balance:'',note:''};
+  const sa=getAcct('savings')||{name:'',balance:'',emPortion:'',liquidPortion:'',note:''};
+  showModal('Set Up Bank Accounts',`
+  <div class="muted mb12" style="font-size:11px;background:var(--bg3);border-radius:var(--r);padding:10px 12px;line-height:1.6">Your <strong>daily account</strong> receives salary and pays all expenses. Your <strong>savings account</strong> holds the emergency fund and liquid buffer. Full balances of both accounts count as part of your total wealth.</div>
+  <div style="font-size:11px;font-weight:600;color:var(--pos);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">💳 Daily / Salary Account</div>
+  <div class="fr"><div class="fg"><label class="fl">Account Name</label><input type="text" class="fi" id="ea-n" value="${ea.name||''}" placeholder="e.g. HDFC Daily Account"></div><div class="fg"><label class="fl">Current Balance (₹)</label><input type="number" class="fi" id="ea-b" value="${ea.balance||''}" placeholder="0"></div></div>
+  <div class="fg"><label class="fl">Note</label><input type="text" class="fi" id="ea-note" value="${ea.note||''}" placeholder="Salary credited here. Used for expenses."></div>
+  <div class="div"></div>
+  <div style="font-size:11px;font-weight:600;color:var(--p);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🏦 Savings Account</div>
+  <div class="fr"><div class="fg"><label class="fl">Account Name</label><input type="text" class="fi" id="sa-n" value="${sa.name||''}" placeholder="e.g. HDFC Savings"></div><div class="fg"><label class="fl">Total Balance (₹)</label><input type="number" class="fi" id="sa-b" value="${sa.balance||''}" placeholder="0"></div></div>
+  <div class="fr"><div class="fg"><label class="fl">Emergency Fund Portion (₹)</label><input type="number" class="fi" id="sa-em" value="${sa.emPortion||''}" placeholder="0"><div class="fh">Untouchable emergency reserve</div></div><div class="fg"><label class="fl">Liquid Buffer (₹)</label><input type="number" class="fi" id="sa-liq" value="${sa.liquidPortion||''}" placeholder="0"><div class="fh">Accessible beyond emergency fund</div></div></div>
+  <div class="fg"><label class="fl">Note</label><input type="text" class="fi" id="sa-note" value="${sa.note||''}" placeholder="e.g. Emergency ₹1.8L, Liquid ₹1.3L"></div>`,
+  ()=>{
+    const saB=gn('sa-b'),saEM=gn('sa-em'),saLiq=gn('sa-liq');
+    if(saB>0&&saEM+saLiq>saB){toast('Emergency + liquid cannot exceed savings balance','err');return false;}
+    S.accounts=S.accounts.filter(a=>a.type!=='daily'&&a.type!=='savings');
+    S.accounts.push({id:'acc-daily',name:gv('ea-n')||'Daily Account',type:'daily',balance:gn('ea-b'),emPortion:0,liquidPortion:0,note:gv('ea-note')||''});
+    S.accounts.push({id:'acc-sav',name:gv('sa-n')||'Savings Account',type:'savings',balance:saB,emPortion:saEM,liquidPortion:saLiq,note:gv('sa-note')||''});
+    save();toast('Accounts saved','ok');return true;});
+}
+function openUpdateAccounts(){
+  if(!S.accounts.length){openAccountSetup();return;}
+  const ea=getAcct('daily'),sa=getAcct('savings');
+  showModal('Update Account Balances',`
+  ${ea?`<div class="fg"><label class="fl">💳 ${ea.name} — Balance (₹)</label><input type="number" class="fi" id="ua-eb" value="${ea.balance||0}"></div>`:''}
+  ${sa?`<div class="fg"><label class="fl">🏦 ${sa.name} — Total Balance (₹)</label><input type="number" class="fi" id="ua-sb" value="${sa.balance||0}"></div>
+  <div class="fr"><div class="fg"><label class="fl">Emergency Fund Portion (₹)</label><input type="number" class="fi" id="ua-em" value="${sa.emPortion||0}"><div class="fh">Untouchable reserve</div></div><div class="fg"><label class="fl">Liquid Buffer (₹)</label><input type="number" class="fi" id="ua-liq" value="${sa.liquidPortion||0}"><div class="fh">Accessible savings</div></div></div>`:''}`,
+  ()=>{
+    if(ea){ea.balance=gn('ua-eb');}
+    if(sa){
+      const saB=gn('ua-sb'),saEM=gn('ua-em'),saLiq=gn('ua-liq');
+      if(saB>0&&saEM+saLiq>saB){toast('Portions exceed balance — saved anyway, please review','info');}
+      sa.balance=saB;sa.emPortion=saEM;sa.liquidPortion=saLiq;
+    }
+    save();toast('Accounts updated','ok');return true;});
+}
+function openUpdateAccount(id){const a=S.accounts.find(x=>x.id===id);if(!a)return;openUpdateAccounts();}
+
+// Snap
+function openSnap(){
+  const N=netWorthCalc();
+  showModal('Capture Net Worth Snapshot',`
+  <div class="muted mb12" style="font-size:11px">Snapshot records your current total wealth (investments + accounts − liabilities). Values are preserved even if you update categories later.</div>
+  <div class="g3 mb12">
+    <div style="background:var(--bg3);border-radius:var(--r);padding:10px"><div class="kl">Assets</div><div style="font-weight:700;font-size:16px">${fi(N.assets,true)}</div><div class="muted" style="font-size:10px">Investments + accounts</div></div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:10px"><div class="kl">Liabilities</div><div style="font-weight:700;font-size:16px">${fi(N.liabs,true)}</div></div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:10px"><div class="kl">Net Worth</div><div style="font-weight:700;font-size:16px">${fi(N.nw,true)}</div></div>
+  </div>
+  <div class="fr"><div class="fg"><label class="fl">Snapshot Date</label><input type="date" class="fi" id="sn-d" value="${today()}"></div><div class="fg"><label class="fl">Notes</label><input type="text" class="fi" id="sn-n" placeholder="e.g. End of March"></div></div>`,
+  ()=>{const date=gv('sn-d');if(!date){toast('Date required','err');return false;}
+    const ex=S.snaps.find(s=>s.date===date);
+    if(ex&&!confirm('A snapshot for this date exists. Overwrite?'))return false;
+    S.snaps=S.snaps.filter(s=>s.date!==date);
+    S.snaps.push({id:uid(),date,assets:N.assets,liabs:N.liabs,nw:N.nw,notes:gv('sn-n')||''});
+    S.snaps.sort((a,b)=>a.date.localeCompare(b.date));
+    save();toast('Snapshot captured','ok');return true;});
+}
+
+// Goal modal
+function openModal(type){
+  if(type==='goal'){
+    showModal('New Financial Goal',`
+    <div class="fr"><div class="fg"><label class="fl">Goal Name</label><input type="text" class="fi" id="g-n" placeholder="e.g. Retirement Corpus"></div><div class="fg"><label class="fl">Type</label><select class="fsel" id="g-type"><option value="retirement">Retirement</option><option value="education">Education</option><option value="house">House</option><option value="vehicle">Vehicle</option><option value="vacation">Vacation</option><option value="emergency">Emergency Fund</option><option value="other">Other</option></select></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Target (₹)</label><input type="number" class="fi" id="g-tgt" placeholder="0"></div><div class="fg"><label class="fl">Target Date</label><input type="date" class="fi" id="g-td"></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Earmarked Today (₹)</label><input type="number" class="fi" id="g-em" placeholder="0"><div class="fh">Portion of existing wealth for this goal</div></div><div class="fg"><label class="fl">Monthly Contribution (₹)</label><input type="number" class="fi" id="g-mc" placeholder="0"></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Expected Return (%)</label><input type="number" class="fi" id="g-ret" value="10" step="0.5"></div><div class="fg"><label class="fl">Priority</label><select class="fsel" id="g-pri"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div></div>`,
+    ()=>{const name=gv('g-n'),target=gn('g-tgt');if(!name||!target){toast('Name and target required','err');return false;}
+      S.goals.push({id:uid(),name,type:gv('g-type')||'other',pri:gv('g-pri')||'medium',target,tDate:gv('g-td')||'',earmark:gn('g-em'),xRet:gn('g-ret')||10,inf:S.cfg.inflation,mContrib:gn('g-mc'),stepUp:0,notes:''});
+      save();toast('Goal created','ok');return true;});
+  } else if(type==='liability'){
+    showModal('Add Liability',`
+    <div class="fr"><div class="fg"><label class="fl">Name</label><input type="text" class="fi" id="l-n" placeholder="e.g. SBI Home Loan"></div><div class="fg"><label class="fl">Type</label><select class="fsel" id="l-type"><option value="homeloan">Home Loan</option><option value="personal">Personal Loan</option><option value="vehicle">Vehicle Loan</option><option value="education">Education Loan</option><option value="creditcard">Credit Card</option><option value="other">Other</option></select></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Outstanding (₹)</label><input type="number" class="fi" id="l-p" placeholder="0"></div><div class="fg"><label class="fl">Rate (%)</label><input type="number" class="fi" id="l-r" placeholder="8.5" step="0.25"></div></div>
+    <div class="fr"><div class="fg"><label class="fl">EMI (₹)</label><input type="number" class="fi" id="l-emi" placeholder="0"></div><div class="fg"><label class="fl">Maturity</label><input type="date" class="fi" id="l-mat"></div></div>`,
+    ()=>{const name=gv('l-n'),prin=gn('l-p');if(!name||!prin){toast('Name and amount required','err');return false;}
+      S.liabs.push({id:uid(),name,type:gv('l-type')||'other',prin,rate:gn('l-r'),emi:gn('l-emi'),mat:gv('l-mat')||'',notes:''});
+      save();toast('Liability added','ok');return true;});
+  } else if(type==='trip'){
+    showModal('Add Trip',`
+    <div class="fr"><div class="fg"><label class="fl">Trip Name</label><input type="text" class="fi" id="tr-n" placeholder="e.g. Goa Trip"></div><div class="fg"><label class="fl">Destination</label><input type="text" class="fi" id="tr-dest"></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Start Date</label><input type="date" class="fi" id="tr-s"></div><div class="fg"><label class="fl">End Date</label><input type="date" class="fi" id="tr-e"></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Travelers</label><input type="number" class="fi" id="tr-p" value="1"></div><div class="fg"><label class="fl">Budget (₹)</label><input type="number" class="fi" id="tr-b" placeholder="0"></div></div>
+    <label class="fck mt8"><input type="checkbox" id="tr-dom" checked> Domestic</label>`,
+    ()=>{const name=gv('tr-n');if(!name){toast('Name required','err');return false;}
+      S.trips.push({id:uid(),name,dest:gv('tr-dest')||'',country:'India',dom:gb('tr-dom'),sDate:gv('tr-s')||'',eDate:gv('tr-e')||'',pax:parseInt(document.getElementById('tr-p')?.value)||1,budget:gn('tr-b'),notes:'',inCF:false,exps:[]});
+      save();toast('Trip added','ok');return true;});
+  }
+}
+function editGoal(id){const g=S.goals.find(x=>x.id===id);if(!g)return;
+  showModal('Edit Goal — '+g.name,`
+  <div class="fr"><div class="fg"><label class="fl">Target (₹)</label><input type="number" class="fi" id="g-tgt" value="${g.target}"></div><div class="fg"><label class="fl">Target Date</label><input type="date" class="fi" id="g-td" value="${g.tDate||''}"></div></div>
+  <div class="fr"><div class="fg"><label class="fl">Earmarked (₹)</label><input type="number" class="fi" id="g-em" value="${g.earmark||0}"></div><div class="fg"><label class="fl">Monthly Contribution (₹)</label><input type="number" class="fi" id="g-mc" value="${g.mContrib||0}"></div></div>
+  <div class="fr"><div class="fg"><label class="fl">Expected Return (%)</label><input type="number" class="fi" id="g-ret" value="${g.xRet||10}" step="0.5"></div><div class="fg"><label class="fl">Inflation (%)</label><input type="number" class="fi" id="g-inf" value="${g.inf||6}" step="0.5"></div></div>`,
+  ()=>{g.target=gn('g-tgt')||g.target;g.tDate=gv('g-td')||g.tDate;g.earmark=gn('g-em');g.mContrib=gn('g-mc');g.xRet=gn('g-ret')||10;g.inf=gn('g-inf')||6;save();toast('Goal updated','ok');return true;});
+}
+function openJournal(){
+  showModal('New Journal Entry',`
+  <div class="fr"><div class="fg"><label class="fl">Date</label><input type="date" class="fi" id="j-d" value="${today()}"></div><div class="fg"><label class="fl">Category</label><select class="fsel" id="j-cat"><option>Investment Decision</option><option>Goal Change</option><option>Portfolio Adjustment</option><option>Major Purchase</option><option>Other</option></select></div></div>
+  <div class="fg"><label class="fl">Title</label><input type="text" class="fi" id="j-ttl" placeholder="Brief title"></div>
+  <div class="fg"><label class="fl">Notes</label><textarea class="ftx" id="j-n" placeholder="Record your thoughts and decisions…"></textarea></div>`,
+  ()=>{const ttl=gv('j-ttl');if(!ttl){toast('Title required','err');return false;}
+    S.journal.push({id:uid(),date:gv('j-d')||today(),title:ttl,cat:gv('j-cat')||'Other',notes:gv('j-n')||'',snapId:null});
+    save();toast('Journal entry saved','ok');return true;});
+}
+function viewJournal(id){const j=S.journal.find(x=>x.id===id);if(!j)return;showInfo(j.title,`<div class="muted mb8" style="font-size:10.5px">${fd(j.date)} · <span class="badge bg-gray">${j.cat}</span></div><div style="font-size:13px;line-height:1.7;white-space:pre-line">${j.notes||'No notes.'}</div><div class="flex g8 mt16"><button class="btn bdanger bsm" onclick="delJournal('${j.id}')">Delete</button></div>`);}
+function openTripExp(tid){const cats=['Flights','Train / Road','Hotels','Food','Local Transport','Sightseeing','Shopping','Visa','Miscellaneous'];
+  showModal('Add Trip Expense',`<div class="fr"><div class="fg"><label class="fl">Date</label><input type="date" class="fi" id="te-d" value="${today()}"></div><div class="fg"><label class="fl">Amount (₹)</label><input type="number" class="fi" id="te-a"></div></div><div class="fr"><div class="fg"><label class="fl">Category</label><select class="fsel" id="te-cat">${cats.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="fg"><label class="fl">Description</label><input type="text" class="fi" id="te-desc"></div></div>`,
+  ()=>{const t=S.trips.find(x=>x.id===tid);if(!t)return false;const amt=gn('te-a');if(!amt){toast('Amount required','err');return false;}
+    t.exps.push({id:uid(),date:gv('te-d')||today(),cat:gv('te-cat')||'Miscellaneous',amt,desc:gv('te-desc')||''});
+    save();toast('Expense added','ok');closeM();viewTrip(tid);return false;});}
+
+// Manage categories
+function openManageCats(){
+  showInfo('Manage Wealth Categories',`
+  <div class="muted mb12" style="font-size:11px">Click to toggle. Disabled categories keep their history — re-enabling them restores all previous values.</div>
+  <div class="flex" style="flex-wrap:wrap;gap:8px">${ALL_WCATS.map(c=>`<div onclick="toggleCat('${c.id}');this.style.background=S.activeCats.includes('${c.id}')?'var(--pi)':'var(--bg3)';this.style.borderColor=S.activeCats.includes('${c.id}')?'var(--p)':'var(--bd)';this.style.color=S.activeCats.includes('${c.id}')?'var(--p)':'var(--t2)'" style="padding:8px 14px;border-radius:var(--r);cursor:pointer;font-size:12px;border:1px solid ${S.activeCats.includes(c.id)?'var(--p)':'var(--bd)'};background:${S.activeCats.includes(c.id)?'var(--pi)':'var(--bg3)'};color:${S.activeCats.includes(c.id)?'var(--p)':'var(--t2)'}">${c.icon} ${c.label}</div>`).join('')}</div>
+  <div class="div"></div>
+  <div class="muted" style="font-size:11px">Account-derived cards (Daily Account Balance, Emergency Fund, Liquid Buffer) appear automatically in My Wealth when bank accounts are configured. They are always included in total assets.</div>`);
+}
+function toggleCat(id){
+  if(S.activeCats.includes(id))S.activeCats=S.activeCats.filter(x=>x!==id);
+  else S.activeCats.push(id);
+  save();
+}
+function removeCat(id){if(confirm('Remove '+id+' from My Wealth? The data is kept and can be re-added anytime.')){toggleCat(id);render('mw');}}
+
+// ─── DELETE HELPERS ───────────────────────
+function delCF(id){if(!confirm('Delete?'))return;S.cfLog=S.cfLog.filter(e=>e.id!==id);save();render(curPage);}
+function delWE(id){S.wealthLog=S.wealthLog.filter(e=>e.id!==id);save();closeM();}
+function delLiab(id){if(!confirm('Delete?'))return;S.liabs=S.liabs.filter(l=>l.id!==id);save();renderMW();}
+function delSnap(id){if(!confirm('Delete snapshot?'))return;S.snaps=S.snaps.filter(s=>s.id!==id);save();renderMW();}
+function delGoal(id){if(!confirm('Delete goal?'))return;S.goals=S.goals.filter(g=>g.id!==id);save();renderFP();}
+function delTrip(id){if(!confirm('Delete trip?'))return;S.trips=S.trips.filter(t=>t.id!==id);save();closeM();renderMR();}
+function delTripExp(tid,eid){const t=S.trips.find(x=>x.id===tid);if(!t)return;t.exps=t.exps.filter(e=>e.id!==eid);save();closeM();viewTrip(tid);}
+function delJournal(id){if(!confirm('Delete?'))return;S.journal=S.journal.filter(j=>j.id!==id);save();closeM();renderMR();}
+function toggleTripCF(id,val){const t=S.trips.find(x=>x.id===id);if(!t)return;t.inCF=val;save();toast((val?'Trip linked to':'Removed from')+' Cash Flow','info');}
+
+// ─── EXPORT / IMPORT ─────────────────────
+function exportJSON(){const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='wcc-backup-'+today()+'.json';a.click();toast('Backup exported','ok');}
+function importJSON(){document.getElementById('impf').click();}
+function handleImport(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!d.wealthLog&&!d.cfLog&&!d.accounts&&!d.txns){toast('Invalid backup','err');return;}if(!confirm('Replace all current data?'))return;S=JSON.parse(JSON.stringify(DS));Object.keys(d).forEach(k=>{if(k in S)S[k]=d[k];});S.v=VER;if(!S.activeCats||!S.activeCats.length)S.activeCats=ALL_WCATS.map(c=>c.id);if(!S.showSynthCats)S.showSynthCats=['__salary_acct','__savings_liq','__em_fund'];save();render(curPage);toast('Backup restored','ok');}catch(e){toast('Failed: '+e.message,'err');}inp.value='';};r.readAsText(f);}
+function exportCFCSV(){const rows=[['Date','Type','Category','Note','Amount'],...S.cfLog.map(e=>{const cat=CFCATS.find(c=>c.id===e.catId)||{label:e.catId};return[e.date,e.type,cat.label,e.note||'',e.amt];})];const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='wcc-cashflow-'+today()+'.csv';a.click();toast('CSV exported','ok');}
+function genReport(){render('mr');setTimeout(()=>{setTab('mr-tabs','reports');setTimeout(()=>window.print(),300);},100);}
+function restoreDemo(){if(!confirm('Load demo data? Replaces all current data.'))return;S=JSON.parse(JSON.stringify(DS));loadDemo();save();render('cc');toast('Demo data restored','ok');}
+function resetApp(){if(!confirm('Reset all data?'))return;if(!confirm('Cannot be undone. Continue?'))return;localStorage.removeItem(DBKEY);location.reload();}
+
+// ─── MONTHLY REVIEW ──────────────────────
+function startReview(){
+  const stale=ALL_WCATS.filter(c=>S.activeCats.includes(c.id)&&(()=>{const lv=latestCatVal(c.id);return lv.date&&(new Date()-new Date(lv.date))/(864e5)>30&&lv.value>0;})());
+  showInfo('Monthly Review',`<div class="muted mb16" style="font-size:11px">A quick 5-step check to keep your financial picture current.</div>
+  ${[
+    {n:1,t:'Log income, expenses & investments',desc:S.cfLog.filter(e=>mkey(e.date)===mkey()).length+' entries this month',act:"render('cf');closeM()"},
+    {n:2,t:'Update account balances',desc:S.accounts.length?'Update daily and savings account balances':'Accounts not set up yet',act:"openUpdateAccounts();"},
+    {n:3,t:'Update investment portfolio',desc:stale.length?'⚠️ '+stale.length+' categories need updating':'All recently updated',act:"openUpdateWealth()"},
+    {n:4,t:'Capture net worth snapshot',desc:'Last: '+(S.snaps.length?fd(S.snaps[S.snaps.length-1].date):'None yet'),act:"openSnap()"},
+    {n:5,t:'Review goals and forecast',desc:S.goals.length+' active goals',act:"render('fp');closeM()"},
+  ].map(s=>`<div class="flex fi2 g12 mb12" style="background:var(--bg3);border-radius:var(--r);padding:10px 14px;cursor:pointer" onclick="${s.act}">
+    <div style="width:26px;height:26px;border-radius:50%;background:var(--pi);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--p);flex-shrink:0">${s.n}</div>
+    <div style="flex:1"><div style="font-weight:600;font-size:13px">${s.t}</div><div class="muted" style="font-size:11px">${s.desc}</div></div>
+    <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--t2)" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>`).join('')}`);}
+
+// ─── TOAST ────────────────────────────────
+function toast(msg,type){const c=document.getElementById('tc');const el=document.createElement('div');const ico={ok:'<svg viewBox="0 0 24 24" stroke="var(--pos)" stroke-width="2.5" fill="none" width="14"><polyline points="20 6 9 17 4 12"/></svg>',err:'<svg viewBox="0 0 24 24" stroke="var(--neg)" stroke-width="2.5" fill="none" width="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',info:'<svg viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2.5" fill="none" width="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'};el.className='toast t-'+(type||'info');el.innerHTML=(ico[type]||ico.info)+msg;c.appendChild(el);setTimeout(()=>el.remove(),3000);}
+
+// ─── FAB ──────────────────────────────────
+let fabOpen=false;
+function toggleFab(){fabOpen=!fabOpen;document.getElementById('fabm').classList.toggle('open',fabOpen);}
+function closeFab(){fabOpen=false;document.getElementById('fabm').classList.remove('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('#fab')&&!e.target.closest('#fabm'))closeFab();});
+
+// ─── BOOT ─────────────────────────────────
+(function init(){
+  const has=load();
+  if(has&&(S.wealthLog!==undefined||S.accounts!==undefined)){
+    document.getElementById('wiz').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.getElementById('fab').style.display='flex';
+    render('cc');
+    const now=new Date();
+    const daysLeft=new Date(now.getFullYear(),now.getMonth()+1,0).getDate()-now.getDate();
+    const lastSnap=S.snaps.slice(-1)[0];
+    if(daysLeft<=3&&(!lastSnap||mkey(lastSnap.date)!==mkey())&&(S.wealthLog.length>0||S.accounts.length>0)){
+      setTimeout(()=>toast('Month-end approaching — consider capturing a snapshot.','info'),1500);
+    }
+  } else {
+    document.getElementById('fab').style.display='none';
+  }
+})();
+</script>
+</body>
+</html>
